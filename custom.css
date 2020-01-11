@@ -1,0 +1,143 @@
+a, a:visited {
+  color: #42affa;
+  text-decoration: none;
+}
+.column {
+  float: left;
+}
+.left {
+  margin-right: 0;
+  width: 49%;
+}
+.right {
+  width: 51%;
+}
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.pizza-microservice {
+  height: 480px;
+  width: 420px;
+}
+.post-signup {
+  font-size: 0.6em;
+  float: left;
+  margin-top: 50px;
+  margin-left: 36px;
+}
+pre#legal-secret-fp, pre#legal-secret-oo,
+pre#authorisation-routes, pre#authorisation-app {
+  font-size: 0.36em;
+  width: 98%;
+}
+pre#authoriser, pre#authoriser-app {
+  font-size: 0.36em;
+  width: 94%;
+}
+pre#authorisation-app {
+  margin-top: -30px;
+}
+pre#authoriser {
+  margin-top: 69px;
+}
+pre#kvstore-ioapp, pre#kvstore-io,
+pre#kvstore-tf, pre#kvstore-notes {
+  font-size: 0.34em;
+  width: 98%;
+}
+pre#kvstore-ioapp, pre#kvstore-tf {
+  margin-top: -16px;
+}
+pre#kvstore-io, pre#kvstore-notes {
+  margin-top: -38px;
+}
+pre#kvstore-ioapp code, pre#kvstore-tf code {
+  max-height: 580px;
+}
+pre#activation-token, pre#activation-email,
+pre#w4s-authentication {
+  width: 720px;
+}
+pre#legal-secret-fp, pre#legal-secret-oo,
+pre#activation-token, pre#w4s-authentication,
+pre#authorisation-routes {
+  margin: 68px auto 0;
+}
+pre#activation-email {
+  margin: 0px auto;
+}
+pre#legal-secret-fp code,
+pre#legal-secret-oo code {
+  max-height: 520px;
+  padding: 12px 6px;
+}
+pre#w4s-authentication code {
+  max-height: 560px;
+  padding: 12px;
+}
+.reveal h1, .reveal h2, .reveal h3,
+.reveal h4, .reveal h5, .reveal h6 {
+  text-transform: none;
+}
+.reveal pre {
+  box-shadow: none;
+  font-size: 0.4em;
+  margin: 0 auto;
+}
+.reveal section img.arrow-down,
+.reveal section img.arrow-right {
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+.reveal section img.arrow-down{
+  float: left;
+  margin-top: -30px;
+  margin-left: 80px;
+}
+.reveal section img.arrow-right {
+  float: right;
+  margin-top: -12px;
+}
+.signin {
+  max-width: 760px;
+}
+.slide-title {
+  color: white;
+  font-family: Source Sans Pro;
+  font-size: 5em;
+  font-weight: 600;
+  margin-left: 2%;
+  margin-top: 2%;
+  position: absolute;
+  visibility: hidden;
+}
+.user-authentication {
+  margin-top: 80px;
+}
+.user-authentication .left {
+  margin-right: 1%;
+  width: 40%;
+}
+.user-authentication .right {
+  width: 59%;
+}
+.user-authentication pre {
+  font-size: 0.36em;
+}
+.user-registration {
+  margin-top: 72px;
+}
+.weather4s-links {
+  bottom: 5%;
+  color: white;
+  font-family: Source Sans Pro;
+  font-size: 2.6em;
+  font-weight: 400;
+  margin-left: 2%;
+  position: absolute;
+  visibility: visible;
+}

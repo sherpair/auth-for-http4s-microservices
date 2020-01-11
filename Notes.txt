@@ -1,0 +1,9 @@
+Of course you all know the difference between a monolithic application and an application based on microservices.
+A monolithic application packages all functionalities of our system in one big deployable artifact while in the latter case every microservice represents a specific functionality of the system that is independenty developed and deployed. Right?
+
+Both architectures have their pros in one area & cons in a different one,
+
+and one of the differences between these two architectures to be relevant for our today's talk is how they control access to the resources the system provides.
+==============
+
+Typically, 

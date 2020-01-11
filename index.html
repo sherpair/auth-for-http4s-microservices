@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Auth for http4s microservices</title>
+
+		<meta name="description" content="Authentication and authorisation for http4s microservices">
+		<meta name="author" content="Lucio Biondi (Sherpair)">
+
+		<link rel="stylesheet" href="css/reset.css">
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css" id="theme">
+		<link rel="stylesheet" href="custom.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/darcula.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+
+  <body>
+    <div class="slide-title"></div>
+    <div class="weather4s-links">
+      <div><a href="https://github.com/sherpair/weather4s">https://github.com/sherpair/weather4s</a></div>
+      <div><a href="https://gitter.im/sherpair/weather4s">https://gitter.im/sherpair/weather4s</a></div>
+    </div>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <section>
+          <h3>Role-based &nbsp; Auth &nbsp; for<br/><a href="https://http4s.org/">http4s</a> &nbsp;microservices</h3>
+
+          <aside class="notes">
+            Hi everyone, and thanks for coming. We don't have too much time, and since we have to deal with a few huge
+            topics the talk might be quite dense. I will still try to keep it clear and hands-on, but if you need clarifications
+            please interrupt me, ok?
+
+            <p>
+              You may also want to clone the weather4s repository, because all code we are gonna see is taken from this project, the
+              goal of which is to be a reference, to show a possible approach, for all those Scala developers (including myself) that
+              are developing something more complex than just a functional proof-of-concept application in Scala, specifically, in our
+              case, by using the Typelevel ecosystem... cats-effect, doobie, fs2, http4s, and so on.
+            </p>
+
+            <p>
+              There is also a Gitter channel, if you want to ask something.
+            </p>
+
+            <p>
+              Ok, now there will be the 1st slide. Please do not laugh. This talk is a serious one, and I'm Italian and I don't like
+              stereotypes. <strong>CLICK!</strong>
+            </p>
+          </aside>
+        </section>
+
+        <section>
+          <div class="row">
+            <div class="column left">
+              <p>Monolithic Architecture</p>
+              <img src="images/monolith-454x344.png" alt="Monolithic Architecture">
+            </div>
+            <div class="column right">
+              <p>Microservices</p>
+              <img class="pizza-microservice" src="images/microservices-454x681.png" alt="Microservices Architecture">
+            </div>
+          </div>
+
+          <aside class="notes">
+            Bear with me. When I saw this photo I couldn't resist. However don't worry, the rest of the presentation is serious.
+
+            <p>
+              Of course you all know the difference between a monolithic application and an application based on microservices.
+              In the former case all functionalities of our system are packaged in one big deployable artifact while in the latter
+              case every microservice represents a specific functionality of the system that is independenty developed and deployed. Right?
+            </p>
+            
+            <p>
+              Both architectures have their pros in one area & cons in a different one, but what is relevant for our today's talk is what
+              security measures we need to put in place for a monolith, and what security measures a microservice architecture instead
+              requires. Of course, the purpose of the security measures is in general to control access to our system and to the resources
+              this provides.
+            </p>
+
+            <p>
+              An important aspect to keep in mind is that we will not be using frameworks, service mesh or service providers to handle
+              our security workflow. Everything will be plain Scala, with a focus on http4s and functional programming, with a simplified
+              microservice architecture: no API gateway, all services are independent... they do not communicate to each other.
+              In a real production environment you might want to go probably with a different approach, for instance using an oauth service
+              provider, multi-factor authentication, or a service mesh like Istio if you are in a Kubernetes cluster.
+            </p>
+
+            <p>
+              In the http4s documentation you can read about the tsec project, which is a http4s module for authentication and authorisation,
+              but since I found it complex and a bit confusing I ended up using it only for password hashing. My apologises to Jose Cardon
+              for this criticism... maybe it was just me. Jose Cardon is the main tsec developer.
+            </p>
+          </aside>
+        </section>
+
+        <section data-title="OWASP">
+          <div><a href="https://github.com/OWASP/CheatSheetSeries">https://github.com/OWASP/CheatSheetSeries</a></div>
+
+          <aside class="notes">
+            In any case, every team responsible for the system's security should take into account the security coding practices as
+            suggested by OWASP. That's the link where you can find the OWASP's documentation.
+          </aside>
+        </section>
+
+        <section data-title="Access Control">
+          <ul>
+            <li class="fragment">Registration</li>
+            <li class="fragment">Authentication</li>
+            <li class="fragment">Authorisation</li>
+          </ul>
+
+          <aside class="notes">
+            Typically, our system, be it monolithic or not, involves three steps for the "access control" workflow.
+            <strong>CLICK!</strong>
+
+            <p>
+              For what concerns the "User registration", there is not actually any logic difference between a monolith and microservices.
+              The workflow is the same for both architectures. We will see that it starts instead to diverge, requiring a different handling,
+              with authentication and authorisation,...
+            </p>
+            <p>
+              ... where authentication is the validation of the identity of the user that tries the login, which also means that the
+              user has already successfully gone through the registration process...
+            </p>
+            <p>
+              ... while authorisation is the validation of the permissions given to the user after a successful login, what resources
+              can be accessed with those permissions, what operations are permitted and what not.
+            </p>
+          </aside>
+        </section>
+
+        <section data-title="User registration">
+          <div class="row user-registration">
+            <div class="column left">
+              <pre>
+                <code class="json" data-line-numbers>{
+  "accountId" : "jsmith",
+  "firstName" : "John",
+  "lastName" : "Smith",
+  "email" : "john.smith@gmail.com",
+  "secret" : [97,80,97,115,115,119,111,114,100]
+}</code>
+              </pre>
+              <div class="fragment">
+                <div><img class="arrow-down" src="images/arrow-down.png" alt="Arrow down"></div>
+                <div class="post-signup">POST &nbsp; /auth/signup</div>
+              </div>
+              <div class="fragment"><img class="arrow-right" src="images/arrow-right.png" alt="Arrow right"></div>
+            </div>
+            <div class="column right">
+              <pre class="fragment">
+                <code class="scala" data-line-numbers>final case class SignupRequest(
+  accountId: String,
+  firstName: String,
+  lastName: String,
+  email: String,
+  secret: Array[Byte]
+)</code>
+              </pre>
+
+              <pre class="fragment">
+                <code class="pgsql" data-line-numbers>CREATE TYPE ROLE AS ENUM ('Master', 'Member');
+
+CREATE TABLE IF NOT EXISTS users (
+          id BIGSERIAL PRIMARY KEY,
+  account_id      TEXT NOT NULL UNIQUE,
+  first_name      TEXT NOT NULL,
+   last_name      TEXT NOT NULL,
+       email      TEXT NOT NULL UNIQUE,
+      secret      TEXT NOT NULL,
+      active      BOOL DEFAULT false NOT NULL,
+        role      ROLE DEFAULT 'Member' NOT NULL,
+  created_at TIMESTAMP NOT NULL
+);</code>
+              </pre>
+            </div>
+          </div>
+            
+          <aside class="notes">
+            The first one-time step is always of course to get to know who is our user.
+            Generally what we ask to the user is to provide an accountId, most of the time the email, for sure a strong password, and anything
+            else our use case requires. Of course the credentials are the most important information we want, because that is what we will be
+            using to validate his identity so that he can have access to the system.
+
+            <p>
+              In a REST application, <strong>this</strong> could be the JSON message that we expect to receive at <strong>CLICK!</strong>
+              the &quot;signup&quot; endpoint we expose.
+              We will see later how to implement a public endpoint in http4s. For the time being let's focus on the logic only.
+            </p>
+
+            <p>
+              If feasible, passwords should always be sent as byte arrays and not strings, because strings are wiped out only by the GC, then
+              they stay in memory for potentially long time, which poses a vulnerability. Even if, I have to say, that if an attacker already
+              has access to your memory, you are already much more in trouble.
+            </p>
+
+            <p>
+              What does it happen once the signup request hits the endpoint? Assuming the request is well-formed,  <strong>CLICK!</strong> it
+              gets decoded in the relative case class <strong>CLICK!</strong>,...
+            </p>
+
+            <p>
+              ... and if all data checks are successful, for example accountId and email are not already taken and the password is strong
+              enough, the user data are stored in the DB. <strong>CLICK!</strong>
+              You can see from the table definition that I'm storing two additional values for every user: &quot;active&quot;, set by default
+              to <strong>false</strong>, and &quot;role&quot;, set by default to <strong>Member</strong>. The active flag set to false tells
+              that the new &quot;user&quot; cannot login yet, that some action has to be taken by the user before the first login.
+              We will see that in a bit.
+            </p>
+
+            <p>
+              But before to move on a few security recommendations, also suggested in the OWASP document,...
+              <ul>
+                <li>
+                  the most important of which is to always allow a client to hit an endpoint, any endpoint, only over HTTPS secured via TLS,
+                  1.2 or, even better, 1.3. In Weather4s you can find how to setup Blaze over HTTPS. Blaze is the native backend supported by
+                  http4s.
+                </li>
+                <li>
+                  Additional random recommendations, but there are many more of course, are to only use POST requests to transmit authentication
+                  credentials,...
+                </li>
+                <li>
+                  ...and to implement all data validation server-side, for instance the password-strenght validation. Indeed, we always want
+                  to have a ZERO-Trust policy in place for our system, meaning that no data reaching the system is trusted by default, either
+                  if coming from inside or outside what we consider as the security perimeter. For sure, for example, if the client has already
+                  verified or not the password strength, but even any request coming from other microservices in our network.
+                </li>
+              </ul>
+            </p>
+
+            <p>
+              Speaking of password-strength validation, I would quickly introduce another topic that might sound orthogonal to what we are
+              discussing right now but that sooner or later we have to deal with if we want to use not only http4s but any Typelevel library,
+              and that is how to code functional in Scala.
+            </p>
+
+            <p>
+              What is the fundamental concept in functional programming ? From the name...it's <strong>function</strong>, right?
+              Specifically... <strong>CLICK!</strong> <strong>pure functions</strong>.
+            </p>
+          </aside>
+        </section>
+
+        <section data-title="Pure functions">
+          <div class="row">
+            <div class="column left">
+              <pre id="legal-secret-fp">
+                <code class="scala" data-line-numbers>case class SignupRequest(accountId: ..., secret: Array[Byte]) {
+  
+  lazy val hasLegalSecret: Boolean = {
+    val s = new String(secret, StandardCharsets.UTF_8)
+    s.length &gt;= 8 && verifyIfSecretIsLegal(s) == legal
+  }
+
+  lazy val     legal = 0x0F
+  lazy val lowerCase = 0x01
+  lazy val upperCase = 0x02
+  lazy val     digit = 0x04
+  lazy val   special = 0x08
+  lazy val specials = "!\"#$%&'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~".toSet
+
+  def verifyIfSecretIsLegal(secretAsString: String): Int =
+    secretAsString.foldLeft(0) { (acc, chr) =>
+      if (acc == legal) legal
+      else chr match {
+        case c if Character.isLowerCase(c) => acc | lowerCase
+        case c if Character.isUpperCase(c) => acc | upperCase
+        case c if Character.isDigit(c) => acc | digit
+        case c if specials.contains(c) => acc | special
+        case _ => acc
+      }
+    }
+}</code>
+              </pre>
+            </div>
+
+            <div class="column right fragment">
+              <pre id="legal-secret-oo">
+                <code class="scala" data-line-numbers>case class SignupRequest(accountId: ..., secret: Array[Byte]) {
+    
+  lazy val hasLegalSecret: Boolean = {
+    val s = new String(secret, StandardCharsets.UTF_8)
+    s.length &gt;= 8 && verifyIfSecretIsLegal(s) == legal
+  }
+
+  lazy val specials = "!\"#$%&'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~".toSet
+
+  def verifyIfSecretIsLegal(secretAsString: String): Boolean = {
+    var hasLowerCase = false
+    var hasUpperCase = false
+    var hasDigits = false
+    var hasSpecials = false
+
+    for (chr &lt;- secretAsString)
+      chr match {
+        case c if Character.isLowerCase(c) => hasLowerCase = true
+        case c if Character.isUpperCase(c) => hasUpperCase = true
+        case c if Character.isDigit(c) => hasDigits = true
+        case c if specials.contains(c) => hasSpecials = true
+      }
+
+    hasLowerCase && hasUpperCase && hasDigits && hasSpecials
+  }
+}</code>
+              </pre>
+            </div>
+          </div>
+    
+          <aside class="notes">
+            So, what is a pure function ? A function is pure when it only works on its input values, and always provides the same result for
+            the same set of input values. It's deterministic accordingly. From this definition you can see that nothing is modified in the
+            outer scopes because as I said, the function only works on its input values, which in addition must also be immutable.
+            You cannot pass a mutable array, for example. Or, more in general, any reference to something that can be mutated if you want
+            your function to be pure, because this might cause side effects somewhere in an outer scope, and side effects are what FP tries
+            not to completely avoid, because otherwise we were not able to write many useful programs, but at least to control them. We will
+            see later how we can do that by using the IO monad.
+            <p>
+              I'm using &quot;outer scope&quot;, which of course does not include the function's scope. Let me clarify this with an example...
+              <strong>CLICK!</strong> Is this function pure ? Yes, of course.
+            </p>
+            <p>
+              You could be deceived by the presence of mutable variables in function &quot;verifyIfSecretIsLegal&quot, but actually even this
+              function is pure, as the variables only &quot;infect&quot; the local scope. Which one to use, between these two functions, is
+              just a matter of taste. Personally I like more the left implementation, because in addition to stop the pattern matching once
+              the password is verified to be legal, having mutable variables in FP, where usually everything is immutable, seems in general a
+              betrayal of the idea of FP.
+              Anyway it's not set in stone. Many functional libraries use vars and imperative code under the hood for performance reasons,
+              so if you can gain a significant benefit, and that is relevant for your use case, go for them. Just remember that mutable
+              non-local state opens the door to potential problems, so to speak, to not say bugs, and they are not always easy to track down.
+            </p>
+            <p>
+              In weather4s anyhow, you won't find any var or impure function, and if you had to find one please let me know.
+            </p>
+            <p>
+              While preparing this talk, I was thinking that probably it could be worth a talk only on functions, because, if you think
+              about it, it's how we write our functions to shape the quality of our code. Functors, Monads and so forth are important,
+              for sure, but they are just tools. We need to know what they are for, but at the end if your code is readable or not does
+              not depend on them but rather on whether we code our functions with the SRP in mind, if they are short, if they enable
+              Referential Transparency and local reasoning, how we compose and sequence them (and as you know FP is all about composing and
+              sequencing functions), (if from their name we can immediately figure out what they are for,) and so on. There's a lot to say
+              about functions, but sadly we don't have enough time today.
+            </p>
+            <p>
+              So let's go back to our &quot;User registration&quot; workflow.
+            </p>
+          </aside>
+        </section>
+
+        <section data-title="User registration (with activation token)">
+          <pre id="activation-token">
+            <code class="pgsql" data-line-numbers>CREATE TYPE KIND AS ENUM ('activation', 'email', 'refresh');
+
+CREATE TABLE IF NOT EXISTS tokens (
+           id BIGSERIAL PRIMARY KEY,
+     token_id      TEXT NOT NULL UNIQUE,
+    member_id    BIGINT NOT NULL REFERENCES users(id),
+         kind      KIND NOT NULL,
+  expiry_date TIMESTAMP NOT NULL,
+   created_at TIMESTAMP NOT NULL
+);</code>
+          </pre>
+            
+          <pre id="activation-email" class="fragment">
+            <code class="scala" data-line-numbers>def sendToken(user: User, kind: Kind): Unit = {
+  val expiryDate = Instant.now.plusSeconds(duration.toSeconds)
+  val tokenId = SecureRandomId.Strong.generate
+  val token = TokenRepository.insert(
+    Token(tokenId, user.id, kind, expiryDate)
+  )
+
+  Postman.sendEmail(token, user, kind)
+}</code>
+          </pre>
+            
+          <aside class="notes">
+            <p>
+              If you remember from the last &quot;Registration&quot; slide, for every new user I'm also storing in the DB a false flag
+              to inform the system that the user is not active yet, since some sort of action has to be taken by the user before he can
+              be moved to the active state.
+            </p>
+            <p>
+              In fact, if the user's data are successfully stored in the DB, the application creates a token record, with kind
+              &quot;activation&quot;, and after having stored it in the database, sends to the user an email <strong>CLICK!</strong>
+              with a link containing the activation token, which has to be clicked to confirm the email the user has provided.
+            </p>
+            <p>
+              Here an example of a link which includes the activaton token...<strong>CLICK!</strong>
+            </p>
+          </aside>
+        </section>
+
+
+        <section data-title="Activation endpoint">
+          <div class="small">
+            <a href="">
+              https://sherpair.io/auth/account-activation/460025e13b1d224a049d9883a8f9572b6f3f4424088d9e734d18a036b80132a0
+            </a>
+          </div>
+
+          <aside class="notes">
+            Once the link is clicked, the public endpoint &quot;account-activation&quot; is reached, generally via browser, and if all
+            checks are successful - the token is found in the DB and is not expired - the active flag of the user is set to true, and
+            he can now try to log in.
+            <p>
+              Note also that after all checks, the token record is removed from the DB. Ideally only one token, if any, for a specific
+              user should be always present in the DB.
+            </p>
+          </aside>
+        </section>
+
+        <section data-title="User authentication">
+          <div class="row user-authentication">
+            <div class="column left">
+              <pre>
+                <code class="json" data-line-numbers>{
+  "accountId" : "jsmith",
+  "secret" : [97,80,97,115,115,119,111,114,100]
+}</code>
+              </pre>
+              <div class="fragment">
+                <img src="images/authentication.png" alt="Authentication for monoliths">
+              </div>
+            </div>
+            <div class="column right">
+              <pre class="fragment">
+                <code class="scala" data-line-numbers>final case class SigninRequest(
+  accountId: String,
+  secret: Array[Byte]
+)</code>
+              </pre>
+
+              <pre class="fragment signin">
+                <code class="scala" data-line-numbers>val routes: HttpRoutes[F] = HttpRoutes.of[F] {
+  case request @ POST -> Root / "auth" / "signin" => signin(request)
+}
+
+def signin(request: Request[F]): F[Response[F]] =
+  request.decode[SigninRequest] { sR =>
+    UserRepository.find(sR.accountId)
+      .flatMap(_.fold(notFound(accountId))(checkPw(_, sR)))
+  }
+
+def checkPw(user: User, sR: SigninRequest): F[Response[F]] =
+  SCrypt.checkpwBool[F](sR.secret, PasswordHash[SCrypt](user.secret))
+    .ifM(signinResponse(user), notFound(user.accountId))
+
+def notFound(id: String): F[Response[F]] =
+  NotFound(s"User(${id}) is not known")
+
+def signinResponse(user: User): F[Response[F]] =
+  if (user.active) authenticator.addJwtToResponse(NoContent(), user)
+  else Forbidden("Inactive")</code>
+              </pre>
+            </div>
+          </div>
+
+          <aside class="notes">
+            Ok. If you remember at the beginning I said that the workflow would have started to diverge between monolith and microservices
+            introducing the authentication of users.
+            <p>
+              This is the message we generally receive at the login endpoint for both architectures... the accoundId, or the email sometimes,
+              and the password, right? Let's try to understand why the two architectures require different approaches.
+            </p>
+            <p>
+              It's easy to guess that in a monolithic app authentication and authorisation are centralized and fully stateful.
+              <strong>CLICK!</strong> <strong>CLICK!</strong>
+            </p>
+            <p>
+              Once the user is authenticated, the traditional mechanism used in monolithic apps is to generate a new session, with a unique
+              id, store it in the DB, and send it back to the user, usually in a cookie. Afterwards, the user includes the session-id in each
+              access requests, which the monolith authorizes if it can successfully retrieve the session from the DB and verify that the user
+              has a role or permission allowing to hit that endpoint.
+            </p>
+            <p>
+              Of course, we can't use the same stateful approach for microservices, as we don't have the concept of &quot;session&quot; here.
+              Indeed, we cannot think that the other services of our distributed system have to ask to the Auth service to verify each request
+              that needs to be authorised. That would generate a huge amount of network traffic, and would add latency to each request, because
+              the Auth service should before query the DB and then send the response back. And the other services cannot directly access the
+              Auth DB, because that would violate a prominent principle of microservice architectures: each individual microservice has its own
+              independent DB.
+              Accordingly the other services know nothing of users or sessions. And that's why we need a different approach.
+            </p>
+            <p>
+              Let's have a look to a simplified version of the login process how implemented in the Auth service of weather4s.
+              <strong>CLICK!</strong>
+            </p>
+            <p>
+              Now...
+              A talk is not a decent talk if the speaker does not ask you to raise your hand at least once. You know, a sort of checklist of
+              the things that should be done during a talk... so please, how many of you have already used http4s ? And how many already know
+              what is this uppercase F around?
+            </p>
+            <p>
+              A short review of this code, and then I try to shed some light on the F matter.
+            </p>
+            <p>
+              This is how to define endpoints in http4s. You pass to the <strong>of</strong> method of the <strong>HttpRoutes</strong> object
+              a PartialFunction where every case statement defines an endpoint. Here a POST request to &quot;/auth/signin&quot; triggers the
+              &quot;signin&quot; method, which after decoding the request, tries to retrieve the user from the DB. If the user is unknown the
+              response is a notFound (404) otherwise tries to match the passwords. If they don't match the response is still notFound, otherwise
+              tries to check if the user is active or not. If not this time the response is Forbidden (403), otherwise calls the Authenticator
+              which adds a JSON Web Token (a Jot) to the response that will be this time a noContent (204). We will see the Authenticator in a
+              bit, but let's try before to understand what is the big F. 
+            </p>
+            </aside>
+        </section>
+
+        <section>
+          <div class="row">
+            <div class="column left">
+              <pre id="kvstore-ioapp">
+                <code class="scala" data-line-numbers>object KVStore extends IOApp {
+  def run(args: List[String]): IO[ExitCode] = program
+
+  val program: IO[ExitCode] =
+    Ref.of[IO, Map[String, String]](Map.empty) >>= { ref =>
+      val dsl = new Http4sDsl[F] {}; import dsl._
+
+      def add(k: String, v: String): IO[Response[IO]] =
+        ref.update(_.updated(k, v)) *> NoContent()
+
+      def delete(k: String): IO[Response[IO]] =
+        ref.update(_.removed(k)) *> NoContent()
+
+      def find(k: String): IO[Response[IO]] =
+        ref.get >>= { _.get(k).fold(NotFound())(Ok(_)) }
+
+      val getRoute = HttpRoutes.of[IO] {
+        case GET -> Root / "kv" / k => find(k) }
+
+      val modRoutes = HttpRoutes.of[IO] {
+        case DELETE -> Root / "kv" / k => delete(k)
+        case    PUT -> Root / "kv" / k / v => add(k, v) }
+  
+      httpServer(getRoute &lt;+&gt; modRoutes)
+    }
+
+  def httpServer(routes: HttpRoutes[IO]): IO[ExitCode] =
+    BlazeServerBuilder[IO]
+      .withHttpApp(routes.orNotFound)
+      .serve.compile.lastOrError
+}</code>
+              </pre>
+              <pre id="kvstore-io" class="fragment">
+                <code class="scala" data-line-numbers>object KVStore {
+  implicit val timer = IO.timer(global)
+  implicit val contextShift = IO.contextShift(global)
+  def main(args: List[String]): Unit = program.unsafeRun...
+  val program: IO[Unit] =</code>
+              </pre>
+              </div>
+
+            <div class="column right fragment">
+              <pre id="kvstore-tf">
+                <code class="scala" data-line-numbers>object KVStore extends IOApp {
+  def run(args: List[String]): IO[ExitCode] = program[IO]
+
+  def program[F[_]: CE: Timer]: F[ExitCode] =
+    Ref.of[F, Map[String, String]](Map.empty) >>= { ref =>
+      val dsl = new Http4sDsl[F] {}; import dsl._
+
+      def add(k: String, v: String): F[Response[F]] =
+        ref.update(_.updated(k, v)) *> NoContent()
+
+      def delete(k: String): F[Response[F]] =
+        ref.update(_.removed(k)) *> NoContent()
+
+      def find(k: String): F[Response[F]] =
+        ref.get >>= { _.get(k).fold(NotFound())(Ok(_)) }
+
+      val getRoute = HttpRoutes.of[F] {
+        case GET -> Root / "kv" / k => find(k) }
+
+      val modRoutes = HttpRoutes.of[F] {
+        case DELETE -> Root / "kv" / k => delete(k)
+        case    PUT -> Root / "kv" / k / v => add(k, v) }
+  
+        http(getRoute &lt;+&gt; modRoutes)
+      }
+
+  def http[F[_]: CE: Timer](routes: HttpRoutes[F]): F[ExitCode] =
+    BlazeServerBuilder[F]
+      .withHttpApp(routes.orNotFound)
+      .serve.compile.lastOrError
+}</code>
+            </pre>
+            <pre id="kvstore-notes">
+              <code class="scala">
+  import cats.effect.{ConcurrentEffect => CE}
+
+</code>
+            </pre>
+          </div>
+        </div>
+
+        <aside class="notes">
+            <p>
+            </p>
+          </aside>
+        </section>
+
+        <section data-title="User authentication">
+          <pre id="w4s-authentication">
+            <code class="scala" data-line-numbers>import cats.effect.Sync
+import pdi.jwt.{Jwt, JwtClaim, JwtTime}
+import pdi.jwt.algorithms.JwtRSAAlgorithm
+              
+class Authenticator[F[_]](
+    jwtAlgorithm: JwtRSAAlgorithm, privateKey: PrivateKey)(
+    implicit C: AuthConfig, S: Sync[F]
+) {
+
+  def addJwtToResponse(
+      responseF: F[Response[F]], user: User): F[Response[F]] =
+    for {
+      response &lt;- responseF
+      jwt &lt;- S.delay(
+        Jwt.encode(claims(user), privateKey, jwtAlgorithm))
+    }
+    yield response.putHeaders(
+      Authorization(Credentials.Token(AuthScheme.Bearer, jwt)))
+
+  private def claims(user: User): JwtClaim = {
+    val now = JwtTime.nowSeconds
+    JwtClaim(
+      user.claimContent, Claims.issO, user.id.toString.some,
+      Claims.audO, (now + C.authToken.duration.toSeconds).some,
+      now.some, now.some)
+  }
+}</code>
+          </pre>
+
+          <aside class="notes">
+            <p>
+            </p>
+          </aside>
+        </section>
+
+        <section data-title="User authorisation">
+          <div class="row">
+            <div class="column left">
+              <pre id="authorisation-routes">
+                <code class="scala" data-line-numbers>object Routes {
+  def apply[F[_]: CE](c: Countries): F[HttpRoutes[F]] =
+    for {
+      authoriser &lt;- Authoriser[F]("/sherpair.io/auth", RS256)
+      routes &lt;- CE[F].delay {
+        authoriser(new CountryApp[F](countries).routes)
+      }
+    }
+    yield routes
+}</code>
+              </pre>
+              <pre id="authorisation-app">
+                <code class="scala" data-line-numbers>class CountryApp[F[_]: CE](c: Countries) extends Http4sDsl[F] {
+  implicit val countryEncoder: EntityEncoder[F, Country] =
+    jsonEncoderOf[F, Country]
+
+  val routes = AuthedRoutes.of[UserAsClaim, F] {
+    case GET -> Root / "geo" / "country" / id as _ =>
+      findCountry(id) >>= { _.fold(NotFound(id))(Ok(_)) }
+
+    case GET -> Root / "geo" / "health" as user =>
+      masterOnly(user, healthCheck)
+  }
+
+  def findCountry(id: String): F[Option[Country]] = ...
+
+  def healthCheck: F[Response[F]] = ...
+
+  def masterOnly(user: UserAsClaim, f: => F[Response[F]]) =
+    if (user.role == Master) f else Forbidden("Unauthorized")
+}</code>
+              </pre>
+            </div>
+
+            <div class="column right fragment">
+              <pre id="authoriser">
+                <code class="scala" data-line-numbers>  type Authoriser[F[_]] = AuthMiddleware[F, UserAsClaim]
+  type EitherUC = Either[String, UserAsClaim]
+
+  AuthMiddleware(Kleisli(req => validateToken(req)), onFailure)
+
+</code>
+              </pre>
+              <pre id="authoriser-app">
+                <code class="scala" data-line-numbers>  val onFailure =
+    Kleisli(req => OptionT.liftF(Forbidden(req.context)))
+
+  def validateToken(req: Request[F]): F[EitherUC] =
+    retrieveBearerToken(req).fold(noToken)(decodeToken(_))
+
+  def decodeToken(token: String): F[EitherUC] =
+    JwtCirce.decodeAll(token, publicKey, jwtAlgorithm)
+      .map(tokenAsTuple => validateClaim(tokenAsTuple._2))
+      .recover { case _: JwtException => notAuthorized }
+      .liftTo[F]
+
+  def validateClaim(claim: JwtClaim): EitherUC =
+    if (claim.isValid(Claims.iss, issuer))
+      decode[UserAsClaim](claim.content).fold {
+      _ => notAuthorized, content => content.asRight[String]
+    }
+    else notAuthorized
+
+  val noToken = "Missing token".asLeft[UserAsClaim].pure[F]
+  val notAuthorized = "Not authorized".asLeft[UserAsClaim]
+
+</code>
+              </pre>
+            </div>
+          </div>
+    
+          <aside class="notes">
+            <p>
+            </p>
+          </aside>
+        </section>
+
+        <section data-title="The missing bits">
+          <ul>
+            <li class="fragment">JWT implementation</li>
+            <li class="fragment">JWT invalidation</li>
+            <li class="fragment">JWT alternatives?</li>
+          </ul>
+          <div class="fragment">
+            Token invalidation
+          </div>
+
+          <aside class="notes">
+          </aside>
+        </section>
+
+      </div>
+		</div>
+
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+
+        width: 1280,
+
+        controls: false,
+        hash: true,
+				progress: true,
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				dependencies: [
+					{ src: 'plugin/highlight/highlight.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/search/search.js', async: true },
+					{ src: 'plugin/zoom-js/zoom.js', async: true }
+				]
+			});
+
+      const slide_title = document.querySelectorAll('.slide-title')[0]
+      const w4s_links = document.querySelectorAll('.weather4s-links')[0]
+
+      function slideControl() {
+        if (Reveal.isFirstSlide()) {
+          slide_title.style.visibility = 'hidden'
+          w4s_links.style.visibility = 'visible'
+        }
+        else {
+          w4s_links.style.visibility = 'hidden'
+          const currentSlide = Reveal.getCurrentSlide()
+          if (currentSlide.hasAttribute("data-title")) {
+            slide_title.textContent = currentSlide.getAttribute("data-title")
+            slide_title.style.visibility = 'visible'
+          }
+          else slide_title.style.visibility = 'hidden'
+        }
+      }
+
+      Reveal.addEventListener('slidechanged', function(evt) {
+        slideControl()
+      })
+
+      // On page-load only
+      slideControl()
+		</script>
+	</body>
+</html>
+  
