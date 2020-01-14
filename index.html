@@ -41,15 +41,15 @@
           <h3>Role-based &nbsp; Auth &nbsp; for<br/><a href="https://http4s.org/">http4s</a> &nbsp;microservices</h3>
 
           <aside class="notes">
-            Hi everyone, and thanks for coming. We don't have too much time, and since we have to deal with a few huge
-            topics the talk might be quite dense. I will still try to keep it clear and hands-on, but if you need clarifications
-            please interrupt me, ok?
+            Hi everyone, and thanks for coming. I hope your brain is not too foggy after the food, because we have to deal with a few huge
+            topics and since we don't have too much time the talk might be quite dense. I will still try to keep it clear and hands-on, so
+            to keep you awake, ok?
 
             <p>
               You may also want to clone the weather4s repository, because all code we are gonna see is taken from this project, the
               goal of which is to be a reference, to show a possible approach, for all those Scala developers (including myself) that
-              are developing something more complex than just a functional proof-of-concept application in Scala, specifically, in our
-              case, by using the Typelevel ecosystem... cats-effect, doobie, fs2, http4s, and so on.
+              are developing something more complex than just a functional "Hello world" app in Scala, specifically, in our case, by
+              using the Typelevel ecosystem... cats-effect, doobie, fs2, http4s, and so on.
             </p>
 
             <p>
@@ -76,7 +76,7 @@
           </div>
 
           <aside class="notes">
-            Bear with me. When I saw this photo I couldn't resist. However don't worry, the rest of the presentation is serious.
+            Bear with me. When I saw this photo I couldn't resist. But don't worry, the rest of the presentation is serious, no more pizza.
 
             <p>
               Of course you all know the difference between a monolithic application and an application based on microservices.
@@ -223,12 +223,12 @@ CREATE TABLE IF NOT EXISTS users (
             </p>
 
             <p>
-              But before to move on a few security recommendations, also suggested in the OWASP document,...
+              But before to move on, a few security recommendations, also suggested in the OWASP document,...
               <ul>
                 <li>
-                  the most important of which is to always allow a client to hit an endpoint, any endpoint, only over HTTPS secured via TLS,
-                  1.2 or, even better, 1.3. In Weather4s you can find how to setup Blaze over HTTPS. Blaze is the native backend supported by
-                  http4s.
+                  the most important of which is to always implement your http server only over HTTPS and TLS at least 1.2 or, even better, 1.3.
+                  There is no reason these days to not do that. In Weather4s you can find how to setup Blaze over HTTPS. Blaze is the native
+                  backend supported by http4s.
                 </li>
                 <li>
                   Additional random recommendations, but there are many more of course, are to only use POST requests to transmit authentication
@@ -244,7 +244,7 @@ CREATE TABLE IF NOT EXISTS users (
             </p>
 
             <p>
-              Speaking of password-strength validation, I would quickly introduce another topic that might sound orthogonal to what we are
+              And speaking of password-strength validation, I would quickly introduce another topic that might sound orthogonal to what we are
               discussing right now but that sooner or later we have to deal with if we want to use not only http4s but any Typelevel library,
               and that is how to code functional in Scala.
             </p>
@@ -287,6 +287,9 @@ CREATE TABLE IF NOT EXISTS users (
     }
 }</code>
               </pre>
+              <pre id="impure-rnd" class="fragment">
+                <code class="scala" data-line-numbers>def rnd(): Int = Random.nextInt</code>
+              </pre>
             </div>
 
             <div class="column right fragment">
@@ -322,26 +325,35 @@ CREATE TABLE IF NOT EXISTS users (
           </div>
     
           <aside class="notes">
+            In this code &quot;verifyIfSecretIsLegal&quot; is a pure function, and please note that with pure I mean referential transparent.
+            But I will be using pure in this talk with that meaning, because less intimidating and shorter.
             So, what is a pure function ? A function is pure when it only works on its input values, and always provides the same result for
             the same set of input values. It's deterministic accordingly. From this definition you can see that nothing is modified in the
             outer scopes because as I said, the function only works on its input values, which in addition must also be immutable.
             You cannot pass a mutable array, for example. Or, more in general, any reference to something that can be mutated if you want
-            your function to be pure, because this might cause side effects somewhere in an outer scope, and side effects are what FP tries
+            your function to be pure, because this might cause side effects somewhere in the outer scopes, and side effects are what FP tries
             not to completely avoid, because otherwise we were not able to write many useful programs, but at least to control them. We will
-            see later how we can do that by using the IO monad.
+            see later how we can do that enclosing them in the IO monad. <strong>CLICK!</strong>
             <p>
-              I'm using &quot;outer scope&quot;, which of course does not include the function's scope. Let me clarify this with an example...
-              <strong>CLICK!</strong> Is this function pure ? Yes, of course.
+              This function is not pure, for instance. Even if you call it with the same argument, which has type &quot;Unit&quot;, the
+              result is not always the same. The function has side-effects, indeed. It cannot be replaced with its result, that on the other
+              side you should be always able to do with a pure function, and in general any pure expression.
+            </p>
+            <p>
+              I have used before &quot;outer scope&quot;. And &quot;outer scope&quot; of course does not include the function's scope. Let me
+              clarify what I mean with an example...
+              <strong>CLICK!</strong> Is this version of &quot;verifyIfSecretIsLegal&quot; also a pure function ? Yes, of course.
             </p>
             <p>
               You could be deceived by the presence of mutable variables in function &quot;verifyIfSecretIsLegal&quot, but actually even this
               function is pure, as the variables only &quot;infect&quot; the local scope. Which one to use, between these two functions, is
               just a matter of taste. Personally I like more the left implementation, because in addition to stop the pattern matching once
               the password is verified to be legal, having mutable variables in FP, where usually everything is immutable, seems in general a
-              betrayal of the idea of FP.
+              betrayal of the philosophy of functional programming.
               Anyway it's not set in stone. Many functional libraries use vars and imperative code under the hood for performance reasons,
               so if you can gain a significant benefit, and that is relevant for your use case, go for them. Just remember that mutable
               non-local state opens the door to potential problems, so to speak, to not say bugs, and they are not always easy to track down.
+              <strong>CLICK!</strong>
             </p>
             <p>
               In weather4s anyhow, you won't find any var or impure function, and if you had to find one please let me know.
@@ -349,11 +361,11 @@ CREATE TABLE IF NOT EXISTS users (
             <p>
               While preparing this talk, I was thinking that probably it could be worth a talk only on functions, because, if you think
               about it, it's how we write our functions to shape the quality of our code. Functors, Monads and so forth are important,
-              for sure, but they are just tools. We need to know what they are for, but at the end if your code is readable or not does
-              not depend on them but rather on whether we code our functions with the SRP in mind, if they are short, if they enable
-              Referential Transparency and local reasoning, how we compose and sequence them (and as you know FP is all about composing and
-              sequencing functions), (if from their name we can immediately figure out what they are for,) and so on. There's a lot to say
-              about functions, but sadly we don't have enough time today.
+              for sure, but they are just tools. We need to know what they are for, but at the end if your code is readable or not, easily
+              testable or not, does not depend on them but rather on whether we code our functions with the SRP in mind, if they are short,
+              if they are referential transparent and enable local reasoning, how we compose and sequence them (and as you know FP is all
+              about composing and sequencing functions), (if from their name we can immediately figure out what they are for,) and so on.
+              There's a lot to say about functions, but sadly we don't have enough time today.
             </p>
             <p>
               So let's go back to our &quot;User registration&quot; workflow.
@@ -363,7 +375,7 @@ CREATE TABLE IF NOT EXISTS users (
 
         <section data-title="User registration (with activation token)">
           <pre id="activation-token">
-            <code class="pgsql" data-line-numbers>CREATE TYPE KIND AS ENUM ('activation', 'email', 'refresh');
+            <code class="pgsql" data-line-numbers>CREATE TYPE KIND AS ENUM ('Activation', 'EMail', 'Refresh');
 
 CREATE TABLE IF NOT EXISTS tokens (
            id BIGSERIAL PRIMARY KEY,
@@ -379,7 +391,7 @@ CREATE TABLE IF NOT EXISTS tokens (
             <code class="scala" data-line-numbers>def sendToken(user: User, kind: Kind): Unit = {
   val expiryDate = Instant.now.plusSeconds(duration.toSeconds)
   val tokenId = SecureRandomId.Strong.generate
-  val token = TokenRepository.insert(
+  val token = tokenOps.insert(
     Token(tokenId, user.id, kind, expiryDate)
   )
 
@@ -394,7 +406,7 @@ CREATE TABLE IF NOT EXISTS tokens (
               be moved to the active state.
             </p>
             <p>
-              In fact, if the user's data are successfully stored in the DB, the application creates a token record, with kind
+              In fact, if the user's data are successfully stored in the DB, the application also creates a token record, with kind
               &quot;activation&quot;, and after having stored it in the database, sends to the user an email <strong>CLICK!</strong>
               with a link containing the activation token, which has to be clicked to confirm the email the user has provided.
             </p>
@@ -451,7 +463,7 @@ CREATE TABLE IF NOT EXISTS tokens (
 
 def signin(request: Request[F]): F[Response[F]] =
   request.decode[SigninRequest] { sR =>
-    UserRepository.find(sR.accountId)
+    userOps.find(sR.accountId)
       .flatMap(_.fold(notFound(accountId))(checkPw(_, sR)))
   }
 
@@ -463,7 +475,7 @@ def notFound(id: String): F[Response[F]] =
   NotFound(s"User(${id}) is not known")
 
 def signinResponse(user: User): F[Response[F]] =
-  if (user.active) authenticator.addJwtToResponse(NoContent(), user)
+  if (user.active) tokenOps.addTokensToResponse(user, NoContent())
   else Forbidden("Inactive")</code>
               </pre>
             </div>
@@ -484,7 +496,7 @@ def signinResponse(user: User): F[Response[F]] =
               Once the user is authenticated, the traditional mechanism used in monolithic apps is to generate a new session, with a unique
               id, store it in the DB, and send it back to the user, usually in a cookie. Afterwards, the user includes the session-id in each
               access requests, which the monolith authorizes if it can successfully retrieve the session from the DB and verify that the user
-              has a role or permission allowing to hit that endpoint.
+              has a role or permission allowing to perform the operation connected at that endpoint.
             </p>
             <p>
               Of course, we can't use the same stateful approach for microservices, as we don't have the concept of &quot;session&quot; here.
@@ -514,8 +526,8 @@ def signinResponse(user: User): F[Response[F]] =
               &quot;signin&quot; method, which after decoding the request, tries to retrieve the user from the DB. If the user is unknown the
               response is a notFound (404) otherwise tries to match the passwords. If they don't match the response is still notFound, otherwise
               tries to check if the user is active or not. If not this time the response is Forbidden (403), otherwise calls the Authenticator
-              which adds a JSON Web Token (a Jot) to the response that will be this time a noContent (204). We will see the Authenticator in a
-              bit, but let's try before to understand what is the big F. 
+              which adds a JSON Web Token (a Jot) and a refresh token to the response that will be this time a noContent (204).
+              We will see the Authenticator in a bit, but let's try before to understand what is the big F. 
             </p>
             </aside>
         </section>
@@ -563,7 +575,7 @@ def signinResponse(user: User): F[Response[F]] =
   def main(args: List[String]): Unit = program.unsafeRun...
   val program: IO[Unit] =</code>
               </pre>
-              </div>
+            </div>
 
             <div class="column right fragment">
               <pre id="kvstore-tf">
@@ -598,52 +610,152 @@ def signinResponse(user: User): F[Response[F]] =
       .withHttpApp(routes.orNotFound)
       .serve.compile.lastOrError
 }</code>
-            </pre>
-            <pre id="kvstore-notes">
-              <code class="scala">
+              </pre>
+              <pre id="kvstore-notes">
+                <code class="scala">
   import cats.effect.{ConcurrentEffect => CE}
 
 </code>
-            </pre>
+              </pre>
+            </div>
           </div>
-        </div>
 
-        <aside class="notes">
+          <aside class="notes">
+            This a complete http4s program. We already saw how to define endpoints and this is only one of the many possible ways to start
+            the http server in http4s. The program is a simple key-value store in memory. You can save and retrieve pairs of key-value strings
+            and also delete them. And these actions can work asynchronously of course, like with any other http framework, Play, Spring, etc.
+            The program is also pure, or, if we are dare enough, I could venture saying "referential transparent". Let's see why.
             <p>
+              To implement the same program using a non-functional http framework like Play, for instance, we would be forced to introduce
+              some mutable state to store our strings, by using a mutable map or updating the reference to the new immutable map when we need
+              to bring some modification, right? But we love functional programming, and we don't want to have mutable state in our programs, no?
+              How can we handle then our side effects by not denying our FP philosophy? The solution is provided by the brilliant minds behind
+              Haskell, and it's very simple. Just make your entire program &quot;pure&quot;, transforming all side-effects in pure values by
+              delaying, or better suspending, their execution.
+              Uhmm... not clear, eh!? How can we do that in practice ?
+              Enclosing, wrapping all program's computations, all side-effects in the IO monad.
+            </p>
+            <p>
+              And that's how your functional program but even libraries like http4s use data types like IO from cats-effect for instance, but
+              it could be Monix Task, or ZIO, all Scala implementations of the Haskell IO monad, to control how and when running side-effects.
+              The IO monad indeed, does not run the enclosed expression. Differently then from a Future, for instance, which is instead eager.
+              The IO monad rather, transforms the expression into a sort of pure description of what to compute, which is then added, under
+              the hood by cats-effect, to an internal data structure. Think of this data structure as a sort of list. When all descriptions
+              the program consists of are added to this "list", typically that's the time when you run an unsafeRun method which loops over
+              the list and perform the actual computations.
+            </p>
+            <p>
+              Actually in this example, there is no unsafeRun method anywhere. This is because I'm using &quot;IOApp&quot;, a trait provided
+              by cats-effect which gives a let's say pre-cooked context for running your pure program. Without IOApp the first lines of my
+              program should have been these ones... <strong>CLICK!</strong>
+              By using IOApp I don't need then to define the implicits and even the main method, as they are already defined for us in IOApp.
+              As a rule of thumb, ideally, keep in mind that you should never need to use an unsafeRun method in your code.
+            </p>
+            <p>
+              Quickly, a short explanation of the other symbols and types here in the code not really relevant for this talk.
+              The 3 symbols (gt_than-gt_than-equal, star-gt_than and lt_than-plus-gt_than) are from Cats, and are just aliases respectively for
+              flatMap, product right and combine. Product right is a function of the Apply type class, that allows you to compose two effectful
+              expressions, ignoring the result of the 1st expression. It' just like writing the body of the &quot;add&quot; function in braces
+              with the semicolon between the two expressions. The combineK symbols instead, from the SemigroupK type class, combines here the
+              three routes in one enclosing sequence.
+              Ref instead is another data type, still from cats-effect, for enclosing shared state, in this case the immutable map I'm using as
+              key-value store, and handle it in a concurrent and pure manner. You can think of Ref just like a functional wrapper around the
+              Atomic Java primitives based on CAS (compare-and-swap). Still, you can just Google if you want to know more about this stuff.
+              There's a lot of material online, like videos, blogs, tutorials.
+            </p>
+            <p>
+              Ok, but all this IO thingy does not explain yet the uppercase F we saw before in the authentication code, right? What does the
+              IO monad have to do with the Big F? Well, I hope at this point it will be easy to understand how they are correlated
+              <strong>CLICK!</strong>
+            </p>
+            <p>
+              Ok. We can see that program is now a polymorphic function, and not more a val, because it takes now a type parameter with context
+              bounds, same as the http function, and that within the two functions, the IO has been replaced everywhere with F. However, apart
+              from these few changes, the two implementations are pretty much identical. So why do we have done this ? What advantages do we get
+              from this different encoding ? Well, the first evident difference that you should be able to notice is that program and http
+              are not bound anymore to IO. Indeed the two functions do not care of what type is the container of the side-effects they enclose.
+              The only constraint is that it should implicitly provide at least the same functionalities of ConcurrentEffect and Timer, two other
+              data types from cats-effect.
+              And this is nice in some way because our functions are now more flexible, easier to code not being anymore bound to a specific monad.
+              We can even test them with other similar effectful data types out there and verify how they differ. Passing for instance Monix Task
+              to program instead of IO from cats-effect.
+              Due to lack of time, I won't delve further this topic, but again if you google &quot;tagless final&quot; you can learn more about
+              this encoding style, about algebras, interpreters, and so forth.
+            </p>
+            <p>
+              Ok. Let's go back once again to our security workflow, as we should be able now to understand how are implemented our functional
+              authenticator and authoriser.
             </p>
           </aside>
         </section>
 
         <section data-title="User authentication">
-          <pre id="w4s-authentication">
-            <code class="scala" data-line-numbers>import cats.effect.Sync
-import pdi.jwt.{Jwt, JwtClaim, JwtTime}
-import pdi.jwt.algorithms.JwtRSAAlgorithm
-              
-class Authenticator[F[_]](
-    jwtAlgorithm: JwtRSAAlgorithm, privateKey: PrivateKey)(
-    implicit C: AuthConfig, S: Sync[F]
+          <div class="row">
+            <div class="column left">
+              <pre id="tokenOps">
+                <code class="scala" data-line-numbers>import tsec.common.{SecureRandomId => SR}
+
+class TokenOps[F[_]](auth: Authenticator[F])(
+    implicit C: AuthConfig, TR: TokenRepo[F], S: Sync[F]
 ) {
 
-  def addJwtToResponse(
-      responseF: F[Response[F]], user: User): F[Response[F]] =
+  def addTokensToResponse(
+      user: User, responseF: F[Response[F]]
+  ): F[Response[F]] =
+    create(user, Kind.Refresh, C.token.refreshLife) >>= {
+      auth.addTokensToResponse(responseF, user, _)
+    }
+
+  private def create(
+      user: User, kind: Kind, duration: FiniteDuration
+  ): F[Token] =
+    for {
+      now &lt;- S.delay(Instant.now())
+      expiryDate = now.plusSeconds(duration.toSeconds)
+      token &lt;- TR.insert(
+        Token(SR.Strong.generate, user.id, kind, expiryDate)
+      )
+    }
+    yield token
+}</code>
+              </pre>
+            </div>
+
+            <div class="column right fragment">
+              <pre id="authenticator">
+                <code class="scala" data-line-numbers>class Authenticator[F[_]: Sync](
+    jwtAlgorithm: JwtRSAAlgorithm, privateKey: PrivateKey) {
+
+  def addTokensToResponse(
+      responseF: F[Response[F]], user: User, refreshToken: Token
+  ): F[Response[F]] =
     for {
       response &lt;- responseF
-      jwt &lt;- S.delay(
-        Jwt.encode(claims(user), privateKey, jwtAlgorithm))
+      jwt &lt;- Sync[F].delay(jwtEncode(user))
+      cookie &lt;- cookieWithRefreshTk(refreshToken)
     }
-    yield response.putHeaders(
-      Authorization(Credentials.Token(AuthScheme.Bearer, jwt)))
+    yield response.addCookie(cookie).putHeaders(
+        Authorization(Credentials.Token(AuthScheme.Bearer, jwt)))
 
-  private def claims(user: User): JwtClaim = {
+  private def cookieWithRefreshTk(rt: Token): F[ResponseCookie] =
+    Sync[F].delay(ResponseCookie(
+      "refresh-token", rt.tokenId,
+      expires = Some(HttpDate.unsafeFromInstant(rt.expiryDate)),
+      httpOnly = true, secure = true
+    ))
+
+  private def jwtEncode(user: User): String = {
     val now = JwtTime.nowSeconds
-    JwtClaim(
+    Jwt.encode(JwtClaim(
       user.claimContent, Claims.issO, user.id.toString.some,
       Claims.audO, (now + C.authToken.duration.toSeconds).some,
-      now.some, now.some)
+      now.some, now.some
+    ), privateKey, jwtAlgorithm)
   }
 }</code>
-          </pre>
+              </pre>
+            </div>
+          </div>
 
           <aside class="notes">
             <p>
@@ -738,12 +850,17 @@ class Authenticator[F[_]](
             <li class="fragment">JWT invalidation</li>
             <li class="fragment">JWT alternatives?</li>
           </ul>
-          <div class="fragment">
-            Token invalidation
-          </div>
 
           <aside class="notes">
           </aside>
+        </section>
+
+        <section>
+          <p>Questions ?</p>
+        </section>
+
+        <section>
+          <p>Thanks!</p>
         </section>
 
       </div>

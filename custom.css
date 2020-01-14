@@ -28,7 +28,7 @@ a, a:visited {
   margin-top: 50px;
   margin-left: 36px;
 }
-pre#legal-secret-fp, pre#legal-secret-oo,
+pre#legal-secret-fp, pre#impure-rnd, pre#legal-secret-oo,
 pre#authorisation-routes, pre#authorisation-app {
   font-size: 0.36em;
   width: 98%;
@@ -37,16 +37,21 @@ pre#authoriser, pre#authoriser-app {
   font-size: 0.36em;
   width: 94%;
 }
-pre#authorisation-app {
+pre#impure-rnd, pre#authorisation-app {
   margin-top: -30px;
 }
 pre#authoriser {
   margin-top: 69px;
 }
 pre#kvstore-ioapp, pre#kvstore-io,
-pre#kvstore-tf, pre#kvstore-notes {
+pre#kvstore-tf, pre#kvstore-notes,
+pre#authenticator {
   font-size: 0.34em;
   width: 98%;
+}
+pre#tokenOps {
+  font-size: 0.34em;
+  width: 94%;
 }
 pre#kvstore-ioapp, pre#kvstore-tf {
   margin-top: -16px;
@@ -54,16 +59,12 @@ pre#kvstore-ioapp, pre#kvstore-tf {
 pre#kvstore-io, pre#kvstore-notes {
   margin-top: -38px;
 }
-pre#kvstore-ioapp code, pre#kvstore-tf code {
-  max-height: 580px;
-}
-pre#activation-token, pre#activation-email,
-pre#w4s-authentication {
+pre#activation-token, pre#activation-email {
   width: 720px;
 }
 pre#legal-secret-fp, pre#legal-secret-oo,
-pre#activation-token, pre#w4s-authentication,
-pre#authorisation-routes {
+pre#activation-token, pre#authorisation-routes,
+pre#tokenOps, pre#authenticator {
   margin: 68px auto 0;
 }
 pre#activation-email {
@@ -71,11 +72,9 @@ pre#activation-email {
 }
 pre#legal-secret-fp code,
 pre#legal-secret-oo code {
-  max-height: 520px;
   padding: 12px 6px;
 }
 pre#w4s-authentication code {
-  max-height: 560px;
   padding: 12px;
 }
 .reveal h1, .reveal h2, .reveal h3,
@@ -86,6 +85,9 @@ pre#w4s-authentication code {
   box-shadow: none;
   font-size: 0.4em;
   margin: 0 auto;
+}
+.reveal pre code {
+  max-height: 560px;
 }
 .reveal section img.arrow-down,
 .reveal section img.arrow-right {
