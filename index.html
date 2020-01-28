@@ -28,39 +28,18 @@
 	</head>
 
   <body>
-    <div class="slide-title"></div>
-    <div class="weather4s-links">
-      <div><a href="https://github.com/sherpair/weather4s">https://github.com/sherpair/weather4s</a></div>
-      <div><a href="https://gitter.im/sherpair/weather4s">https://gitter.im/sherpair/weather4s</a></div>
-    </div>
-
     <div class="reveal">
       <div class="slides">
 
         <section>
-          <h3>Role-based &nbsp; Auth &nbsp; for<br/><a href="https://http4s.org/">http4s</a> &nbsp;microservices</h3>
-
-          <aside class="notes">
-            Hi everyone, and thanks for coming. I hope your brain is not too foggy after the food, because we have to deal with a few huge
-            topics and since we don't have too much time the talk might be quite dense. I will still try to keep it clear and hands-on, so
-            to keep you awake, ok?
-
-            <p>
-              You may also want to clone the weather4s repository, because all code we are gonna see is taken from this project, the
-              goal of which is to be a reference, to show a possible approach, for all those Scala developers (including myself) that
-              are developing something more complex than just a functional "Hello world" app in Scala, specifically, in our case, by
-              using the Typelevel ecosystem... cats-effect, doobie, fs2, http4s, and so on.
-            </p>
-
-            <p>
-              There is also a Gitter channel, if you want to ask something.
-            </p>
-
-            <p>
-              Ok, now there will be the 1st slide. Please do not laugh. This talk is a serious one, and I'm Italian and I don't like
-              stereotypes. <strong>CLICK!</strong>
-            </p>
-          </aside>
+          <h3 style="margin: 240px auto 0;">
+            Role-based &nbsp; Auth &nbsp; for<br/><a href="https://http4s.org/">http4s</a> &nbsp;microservices
+          </h3>
+          <div class="weather4s-links" style="float: left; text-align: left;">
+            <div><a href="https://github.com/sherpair/weather4s">https://github.com/sherpair/weather4s</a></div>
+            <div><a href="https://gitter.im/sherpair/weather4s">https://gitter.im/sherpair/weather4s</a></div>
+          </div>
+          <div class="author" style="float: right;">Lucio Biondi</div>
         </section>
 
         <section>
@@ -74,77 +53,46 @@
               <img class="pizza-microservice" src="images/microservices-454x681.png" alt="Microservices Architecture">
             </div>
           </div>
-
-          <aside class="notes">
-            Bear with me. When I saw this photo I couldn't resist. But don't worry, the rest of the presentation is serious, no more pizza.
-
-            <p>
-              Of course you all know the difference between a monolithic application and an application based on microservices.
-              In the former case all functionalities of our system are packaged in one big deployable artifact while in the latter
-              case every microservice represents a specific functionality of the system that is independenty developed and deployed. Right?
-            </p>
-            
-            <p>
-              Both architectures have their pros in one area & cons in a different one, but what is relevant for our today's talk is what
-              security measures we need to put in place for a monolith, and what security measures a microservice architecture instead
-              requires. Of course, the purpose of the security measures is in general to control access to our system and to the resources
-              this provides.
-            </p>
-
-            <p>
-              An important aspect to keep in mind is that we will not be using frameworks, service mesh or service providers to handle
-              our security workflow. Everything will be plain Scala, with a focus on http4s and functional programming, with a simplified
-              microservice architecture: no API gateway, all services are independent... they do not communicate to each other.
-              In a real production environment you might want to go probably with a different approach, for instance using an oauth service
-              provider, multi-factor authentication, or a service mesh like Istio if you are in a Kubernetes cluster.
-            </p>
-
-            <p>
-              In the http4s documentation you can read about the tsec project, which is a http4s module for authentication and authorisation,
-              but since I found it complex and a bit confusing I ended up using it only for password hashing. My apologises to Jose Cardon
-              for this criticism... maybe it was just me. Jose Cardon is the main tsec developer.
-            </p>
-          </aside>
         </section>
 
-        <section data-title="OWASP">
-          <div><a href="https://github.com/OWASP/CheatSheetSeries">https://github.com/OWASP/CheatSheetSeries</a></div>
-
-          <aside class="notes">
-            In any case, every team responsible for the system's security should take into account the security coding practices as
-            suggested by OWASP. That's the link where you can find the OWASP's documentation.
-          </aside>
+        <section>
+          <div class="slide-title">Our Auth implementation</div>
+          <ul style="margin-top: 120px;">
+            <li>Plain <em>FP</em> Scala</li>
+            <li>Simple microservice architecture</li>
+            <li>No Auth service providers</li>
+          </ul>
         </section>
 
-        <section data-title="Access Control">
-          <ul>
-            <li class="fragment">Registration</li>
+        <section>
+          <div class="slide-title">OWASP</div>
+          <div style="margin-top: 220px;">
+            <a href="https://github.com/OWASP/CheatSheetSeries">https://github.com/OWASP/CheatSheetSeries</a>
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-title">Security recommendation</div>
+          <ol style="margin-top: 120px;">
+            <li class="fragment">HTTPS, TLS +1.2</li>
+            <li class="fragment"><em>POST</em> requests for authentication</li>
+            <li class="fragment">Server-side data validation</li>
+            <li class="fragment">Zero-Trust policy</li>
+          </ol>
+        </section>
+
+        <section>
+          <div class="slide-title">Access Control Workflow</div>
+          <ol style="margin-top: 120px;">
+            <li class="fragment">User registration</li>
             <li class="fragment">Authentication</li>
             <li class="fragment">Authorisation</li>
-          </ul>
-
-          <aside class="notes">
-            Typically, our system, be it monolithic or not, involves three steps for the "access control" workflow.
-            <strong>CLICK!</strong>
-
-            <p>
-              For what concerns the "User registration", there is not actually any logic difference between a monolith and microservices.
-              The workflow is the same for both architectures. We will see that it starts instead to diverge, requiring a different handling,
-              with authentication and authorisation,...
-            </p>
-            <p>
-              ... where authentication is the validation of the identity of the user that tries the login, which also means that the
-              user has already successfully gone through the registration process...
-            </p>
-            <p>
-              ... while authorisation is the validation of the permissions given to the user after a successful login, what resources
-              can be accessed with those permissions, what operations are permitted and what not.
-            </p>
-          </aside>
+          </ol>
         </section>
 
-        <section data-title="User registration">
-          <div class="row user-registration">
+        <section>
+          <div class="slide-title">User registration</div>
+          <div class="row" style="margin-top: 60px;">
             <div class="column left">
               <pre>
                 <code class="json" data-line-numbers>{
@@ -189,192 +137,11 @@ CREATE TABLE IF NOT EXISTS users (
               </pre>
             </div>
           </div>
-            
-          <aside class="notes">
-            The first one-time step is always of course to get to know who is our user.
-            Generally what we ask to the user is to provide an accountId, most of the time the email, for sure a strong password, and anything
-            else our use case requires. Of course the credentials are the most important information we want, because that is what we will be
-            using to validate his identity so that he can have access to the system.
-
-            <p>
-              In a REST application, <strong>this</strong> could be the JSON message that we expect to receive at <strong>CLICK!</strong>
-              the &quot;signup&quot; endpoint we expose.
-              We will see later how to implement a public endpoint in http4s. For the time being let's focus on the logic only.
-            </p>
-
-            <p>
-              If feasible, passwords should always be sent as byte arrays and not strings, because strings are wiped out only by the GC, then
-              they stay in memory for potentially long time, which poses a vulnerability. Even if, I have to say, that if an attacker already
-              has access to your memory, you are already much more in trouble.
-            </p>
-
-            <p>
-              What does it happen once the signup request hits the endpoint? Assuming the request is well-formed,  <strong>CLICK!</strong> it
-              gets decoded in the relative case class <strong>CLICK!</strong>,...
-            </p>
-
-            <p>
-              ... and if all data checks are successful, for example accountId and email are not already taken and the password is strong
-              enough, the user data are stored in the DB. <strong>CLICK!</strong>
-              You can see from the table definition that I'm storing two additional values for every user: &quot;active&quot;, set by default
-              to <strong>false</strong>, and &quot;role&quot;, set by default to <strong>Member</strong>. The active flag set to false tells
-              that the new &quot;user&quot; cannot login yet, that some action has to be taken by the user before the first login.
-              We will see that in a bit.
-            </p>
-
-            <p>
-              But before to move on, a few security recommendations, also suggested in the OWASP document,...
-              <ul>
-                <li>
-                  the most important of which is to always implement your http server only over HTTPS and TLS at least 1.2 or, even better, 1.3.
-                  There is no reason these days to not do that. In Weather4s you can find how to setup Blaze over HTTPS. Blaze is the native
-                  backend supported by http4s.
-                </li>
-                <li>
-                  Additional random recommendations, but there are many more of course, are to only use POST requests to transmit authentication
-                  credentials,...
-                </li>
-                <li>
-                  ...and to implement all data validation server-side, for instance the password-strenght validation. Indeed, we always want
-                  to have a ZERO-Trust policy in place for our system, meaning that no data reaching the system is trusted by default, either
-                  if coming from inside or outside what we consider as the security perimeter. For sure, for example, if the client has already
-                  verified or not the password strength, but even any request coming from other microservices in our network.
-                </li>
-              </ul>
-            </p>
-
-            <p>
-              And speaking of password-strength validation, I would quickly introduce another topic that might sound orthogonal to what we are
-              discussing right now but that sooner or later we have to deal with if we want to use not only http4s but any Typelevel library,
-              and that is how to code functional in Scala.
-            </p>
-
-            <p>
-              What is the fundamental concept in functional programming ? From the name...it's <strong>function</strong>, right?
-              Specifically... <strong>CLICK!</strong> <strong>pure functions</strong>.
-            </p>
-          </aside>
         </section>
 
-        <section data-title="Pure functions">
-          <div class="row">
-            <div class="column left">
-              <pre id="legal-secret-fp">
-                <code class="scala" data-line-numbers>case class SignupRequest(accountId: ..., secret: Array[Byte]) {
-  
-  lazy val hasLegalSecret: Boolean = {
-    val s = new String(secret, StandardCharsets.UTF_8)
-    s.length &gt;= 8 && verifyIfSecretIsLegal(s) == legal
-  }
-
-  lazy val     legal = 0x0F
-  lazy val lowerCase = 0x01
-  lazy val upperCase = 0x02
-  lazy val     digit = 0x04
-  lazy val   special = 0x08
-  lazy val specials = "!\"#$%&'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~".toSet
-
-  def verifyIfSecretIsLegal(secretAsString: String): Int =
-    secretAsString.foldLeft(0) { (acc, chr) =>
-      if (acc == legal) legal
-      else chr match {
-        case c if Character.isLowerCase(c) => acc | lowerCase
-        case c if Character.isUpperCase(c) => acc | upperCase
-        case c if Character.isDigit(c) => acc | digit
-        case c if specials.contains(c) => acc | special
-        case _ => acc
-      }
-    }
-}</code>
-              </pre>
-              <pre id="impure-rnd" class="fragment">
-                <code class="scala" data-line-numbers>def rnd(): Int = Random.nextInt</code>
-              </pre>
-            </div>
-
-            <div class="column right fragment">
-              <pre id="legal-secret-oo">
-                <code class="scala" data-line-numbers>case class SignupRequest(accountId: ..., secret: Array[Byte]) {
-    
-  lazy val hasLegalSecret: Boolean = {
-    val s = new String(secret, StandardCharsets.UTF_8)
-    s.length &gt;= 8 && verifyIfSecretIsLegal(s) == legal
-  }
-
-  lazy val specials = "!\"#$%&'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~".toSet
-
-  def verifyIfSecretIsLegal(secretAsString: String): Boolean = {
-    var hasLowerCase = false
-    var hasUpperCase = false
-    var hasDigits = false
-    var hasSpecials = false
-
-    for (chr &lt;- secretAsString)
-      chr match {
-        case c if Character.isLowerCase(c) => hasLowerCase = true
-        case c if Character.isUpperCase(c) => hasUpperCase = true
-        case c if Character.isDigit(c) => hasDigits = true
-        case c if specials.contains(c) => hasSpecials = true
-      }
-
-    hasLowerCase && hasUpperCase && hasDigits && hasSpecials
-  }
-}</code>
-              </pre>
-            </div>
-          </div>
-    
-          <aside class="notes">
-            In this code &quot;verifyIfSecretIsLegal&quot; is a pure function, and please note that with pure I mean referential transparent.
-            But I will be using pure in this talk with that meaning, because less intimidating and shorter.
-            So, what is a pure function ? A function is pure when it only works on its input values, and always provides the same result for
-            the same set of input values. It's deterministic accordingly. From this definition you can see that nothing is modified in the
-            outer scopes because as I said, the function only works on its input values, which in addition must also be immutable.
-            You cannot pass a mutable array, for example. Or, more in general, any reference to something that can be mutated if you want
-            your function to be pure, because this might cause side effects somewhere in the outer scopes, and side effects are what FP tries
-            not to completely avoid, because otherwise we were not able to write many useful programs, but at least to control them. We will
-            see later how we can do that enclosing them in the IO monad. <strong>CLICK!</strong>
-            <p>
-              This function is not pure, for instance. Even if you call it with the same argument, which has type &quot;Unit&quot;, the
-              result is not always the same. The function has side-effects, indeed. It cannot be replaced with its result, that on the other
-              side you should be always able to do with a pure function, and in general any pure expression.
-            </p>
-            <p>
-              I have used before &quot;outer scope&quot;. And &quot;outer scope&quot; of course does not include the function's scope. Let me
-              clarify what I mean with an example...
-              <strong>CLICK!</strong> Is this version of &quot;verifyIfSecretIsLegal&quot; also a pure function ? Yes, of course.
-            </p>
-            <p>
-              You could be deceived by the presence of mutable variables in function &quot;verifyIfSecretIsLegal&quot, but actually even this
-              function is pure, as the variables only &quot;infect&quot; the local scope. Which one to use, between these two functions, is
-              just a matter of taste. Personally I like more the left implementation, because in addition to stop the pattern matching once
-              the password is verified to be legal, having mutable variables in FP, where usually everything is immutable, seems in general a
-              betrayal of the philosophy of functional programming.
-              Anyway it's not set in stone. Many functional libraries use vars and imperative code under the hood for performance reasons,
-              so if you can gain a significant benefit, and that is relevant for your use case, go for them. Just remember that mutable
-              non-local state opens the door to potential problems, so to speak, to not say bugs, and they are not always easy to track down.
-              <strong>CLICK!</strong>
-            </p>
-            <p>
-              In weather4s anyhow, you won't find any var or impure function, and if you had to find one please let me know.
-            </p>
-            <p>
-              While preparing this talk, I was thinking that probably it could be worth a talk only on functions, because, if you think
-              about it, it's how we write our functions to shape the quality of our code. Functors, Monads and so forth are important,
-              for sure, but they are just tools. We need to know what they are for, but at the end if your code is readable or not, easily
-              testable or not, does not depend on them but rather on whether we code our functions with the SRP in mind, if they are short,
-              if they are referential transparent and enable local reasoning, how we compose and sequence them (and as you know FP is all
-              about composing and sequencing functions), (if from their name we can immediately figure out what they are for,) and so on.
-              There's a lot to say about functions, but sadly we don't have enough time today.
-            </p>
-            <p>
-              So let's go back to our &quot;User registration&quot; workflow.
-            </p>
-          </aside>
-        </section>
-
-        <section data-title="User registration (with activation token)">
-          <pre id="activation-token">
+        <section>
+          <div class="slide-title">User registration (with <em>activation token</em>)</div>
+          <pre style="margin: 68px auto 0; width: 720px;">
             <code class="pgsql" data-line-numbers>CREATE TYPE KIND AS ENUM ('Activation', 'EMail', 'Refresh');
 
 CREATE TABLE IF NOT EXISTS tokens (
@@ -387,7 +154,7 @@ CREATE TABLE IF NOT EXISTS tokens (
 );</code>
           </pre>
             
-          <pre id="activation-email" class="fragment">
+          <pre id="activation-email" class="fragment" style="margin: 0px auto; width: 720px;">
             <code class="scala" data-line-numbers>def sendToken(user: User, kind: Kind): Unit = {
   val expiryDate = Instant.now.plusSeconds(duration.toSeconds)
   val tokenId = SecureRandomId.Strong.generate
@@ -398,45 +165,20 @@ CREATE TABLE IF NOT EXISTS tokens (
   Postman.sendEmail(token, user, kind)
 }</code>
           </pre>
-            
-          <aside class="notes">
-            <p>
-              If you remember from the last &quot;Registration&quot; slide, for every new user I'm also storing in the DB a false flag
-              to inform the system that the user is not active yet, since some sort of action has to be taken by the user before he can
-              be moved to the active state.
-            </p>
-            <p>
-              In fact, if the user's data are successfully stored in the DB, the application also creates a token record, with kind
-              &quot;activation&quot;, and after having stored it in the database, sends to the user an email <strong>CLICK!</strong>
-              with a link containing the activation token, which has to be clicked to confirm the email the user has provided.
-            </p>
-            <p>
-              Here an example of a link which includes the activaton token...<strong>CLICK!</strong>
-            </p>
-          </aside>
         </section>
 
-
-        <section data-title="Activation endpoint">
-          <div class="small">
+        <section>
+          <div class="slide-title">Activation endpoint</div>
+          <div style="margin-top: 220px;">
             <a href="">
               https://sherpair.io/auth/account-activation/460025e13b1d224a049d9883a8f9572b6f3f4424088d9e734d18a036b80132a0
             </a>
           </div>
-
-          <aside class="notes">
-            Once the link is clicked, the public endpoint &quot;account-activation&quot; is reached, generally via browser, and if all
-            checks are successful - the token is found in the DB and is not expired - the active flag of the user is set to true, and
-            he can now try to log in.
-            <p>
-              Note also that after all checks, the token record is removed from the DB. Ideally only one token, if any, for a specific
-              user should be always present in the DB.
-            </p>
-          </aside>
         </section>
 
-        <section data-title="User authentication">
-          <div class="row user-authentication">
+        <section>
+          <div class="slide-title">User authentication (<em>monolith</em>)</div>
+          <div class="row">
             <div class="column left">
               <pre>
                 <code class="json" data-line-numbers>{
@@ -456,15 +198,67 @@ CREATE TABLE IF NOT EXISTS tokens (
 )</code>
               </pre>
 
-              <pre class="fragment signin">
-                <code class="scala" data-line-numbers>val routes: HttpRoutes[F] = HttpRoutes.of[F] {
+              <h4 class="fragment" style="left: 54%; position: absolute; top: 60%;">
+                Centralized and fully <em>stateful</em>!
+              </h4 class="fragment">
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-title"><em>Stateful</em> Auth for Microservices ?</div>
+          <ul style="margin-top: 120px;">
+            <li class="fragment">No session</li>
+            <li class="fragment">No access to Auth service's DB</li>
+            <li class="fragment">No own &quot;<em>User</em>&quot; DB</li>
+          </ul>
+        </section>
+
+        <section>
+          <div class="slide-title">What about a <em>stateless</em> approach ?</div>
+          <ul style="margin-top: 120px;">
+            <li class="fragment">Authorisation for microservices ?</li>
+            <li class="fragment"><em>Fully</em> stateless ?</li>
+            <li class="fragment">What level of security can we aim to ?</li>
+          </ul>
+        </section>
+
+        <section>
+          <div class="slide-title">JWTs (<em>stateless</em>) & refresh tokens (<em>stateful!</em>)</div>
+          <div style="text-align: left;"><em>Easy approach</em>
+            <ul style="display: block; font-size: 0.8em; margin-left: 100px; margin-top: 8px;">
+              <li>JWTs & refresh tokens only</li>
+              <li>won't give you a complete level of security</li>
+              <li>can still be &quot;okish&quot;, depending on your use case</li>
+              <li>user, after a logout, might be not really logged out yet for a few minutes</li>
+            </ul>
+          </div>
+          <div class="fragment" style="text-align: left; margin-top: 60px;"><em>More complex approach</em>
+            <ul style="display: block; font-size: 0.8em; margin-left: 100px; margin-top: 8px">
+              <li>in addition to JWTs and refresh tokens</li>
+              <li>a mechanism, not necessarily stateful, to inform the microservices that the user has been logged out</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-title">User authentication (<em>Auth microservice</em>)</div>
+          <pre style="max-width: 760px;">
+            <code class="json" data-line-numbers>{
+"accountId" : "jsmith",
+"secret" : [97,80,97,115,115,119,111,114,100]
+}</code>
+          </pre>
+
+          <pre class="signin" style="margin-top: -40px; max-width: 760px;">
+            <code class="scala" data-line-numbers>val routes: HttpRoutes[F] = HttpRoutes.of[F] {
   case request @ POST -> Root / "auth" / "signin" => signin(request)
 }
 
 def signin(request: Request[F]): F[Response[F]] =
   request.decode[SigninRequest] { sR =>
-    userOps.find(sR.accountId)
-      .flatMap(_.fold(notFound(accountId))(checkPw(_, sR)))
+  userOps.find(sR.accountId)
+    .flatMap(_.fold(notFound(accountId))(checkPw(_, sR)))
   }
 
 def checkPw(user: User, sR: SigninRequest): F[Response[F]] =
@@ -476,70 +270,20 @@ def notFound(id: String): F[Response[F]] =
 
 def signinResponse(user: User): F[Response[F]] =
   if (user.active) tokenOps.addTokensToResponse(user, NoContent())
-  else Forbidden("Inactive")</code>
-              </pre>
-            </div>
-          </div>
+  else Forbidden("Inactive")
 
-          <aside class="notes">
-            Ok. If you remember at the beginning I said that the workflow would have started to diverge between monolith and microservices
-            introducing the authentication of users.
-            <p>
-              This is the message we generally receive at the login endpoint for both architectures... the accoundId, or the email sometimes,
-              and the password, right? Let's try to understand why the two architectures require different approaches.
-            </p>
-            <p>
-              It's easy to guess that in a monolithic app authentication and authorisation are centralized and fully stateful.
-              <strong>CLICK!</strong> <strong>CLICK!</strong>
-            </p>
-            <p>
-              Once the user is authenticated, the traditional mechanism used in monolithic apps is to generate a new session, with a unique
-              id, store it in the DB, and send it back to the user, usually in a cookie. Afterwards, the user includes the session-id in each
-              access requests, which the monolith authorizes if it can successfully retrieve the session from the DB and verify that the user
-              has a role or permission allowing to perform the operation connected at that endpoint.
-            </p>
-            <p>
-              Of course, we can't use the same stateful approach for microservices, as we don't have the concept of &quot;session&quot; here.
-              Indeed, we cannot think that the other services of our distributed system have to ask to the Auth service to verify each request
-              that needs to be authorised. That would generate a huge amount of network traffic, and would add latency to each request, because
-              the Auth service should before query the DB and then send the response back. And the other services cannot directly access the
-              Auth DB, because that would violate a prominent principle of microservice architectures: each individual microservice has its own
-              independent DB.
-              Accordingly the other services know nothing of users or sessions. And that's why we need a different approach.
-            </p>
-            <p>
-              Let's have a look to a simplified version of the login process how implemented in the Auth service of weather4s.
-              <strong>CLICK!</strong>
-            </p>
-            <p>
-              Now...
-              A talk is not a decent talk if the speaker does not ask you to raise your hand at least once. You know, a sort of checklist of
-              the things that should be done during a talk... so please, how many of you have already used http4s ? And how many already know
-              what is this uppercase F around?
-            </p>
-            <p>
-              A short review of this code, and then I try to shed some light on the F matter.
-            </p>
-            <p>
-              This is how to define endpoints in http4s. You pass to the <strong>of</strong> method of the <strong>HttpRoutes</strong> object
-              a PartialFunction where every case statement defines an endpoint. Here a POST request to &quot;/auth/signin&quot; triggers the
-              &quot;signin&quot; method, which after decoding the request, tries to retrieve the user from the DB. If the user is unknown the
-              response is a notFound (404) otherwise tries to match the passwords. If they don't match the response is still notFound, otherwise
-              tries to check if the user is active or not. If not this time the response is Forbidden (403), otherwise calls the Authenticator
-              which adds a JSON Web Token (a Jot) and a refresh token to the response that will be this time a noContent (204).
-              We will see the Authenticator in a bit, but let's try before to understand what is the big F. 
-            </p>
-            </aside>
+</code>
+          </pre>
         </section>
 
         <section>
           <div class="row">
             <div class="column left">
-              <pre id="kvstore-ioapp">
+              <pre style="font-size: 0.34em; margin-top: -16px; width: 96%;">
                 <code class="scala" data-line-numbers>object KVStore extends IOApp {
-  def run(args: List[String]): IO[ExitCode] = program
+  def run(args: List[String]): IO[ExitCode] = app
 
-  val program: IO[ExitCode] =
+  val app: IO[ExitCode] =
     Ref.of[IO, Map[String, String]](Map.empty) >>= { ref =>
       val dsl = new Http4sDsl[F] {}; import dsl._
 
@@ -568,21 +312,21 @@ def signinResponse(user: User): F[Response[F]] =
       .serve.compile.lastOrError
 }</code>
               </pre>
-              <pre id="kvstore-io" class="fragment">
+              <pre class="fragment" style="font-size: 0.34em; margin-top: -38px; width: 96%;">
                 <code class="scala" data-line-numbers>object KVStore {
   implicit val timer = IO.timer(global)
   implicit val contextShift = IO.contextShift(global)
-  def main(args: List[String]): Unit = program.unsafeRun...
-  val program: IO[Unit] =</code>
+  def main(args: List[String]): Unit = app.unsafeRun...
+  val app: IO[Unit] =</code>
               </pre>
             </div>
 
             <div class="column right fragment">
-              <pre id="kvstore-tf">
+              <pre style="font-size: 0.34em; margin-top: -16px; width: 98%;">
                 <code class="scala" data-line-numbers>object KVStore extends IOApp {
-  def run(args: List[String]): IO[ExitCode] = program[IO]
+  def run(args: List[String]): IO[ExitCode] = app[IO]
 
-  def program[F[_]: CE: Timer]: F[ExitCode] =
+  def app[F[_]: CE: Timer]: F[ExitCode] =
     Ref.of[F, Map[String, String]](Map.empty) >>= { ref =>
       val dsl = new Http4sDsl[F] {}; import dsl._
 
@@ -611,89 +355,22 @@ def signinResponse(user: User): F[Response[F]] =
       .serve.compile.lastOrError
 }</code>
               </pre>
-              <pre id="kvstore-notes">
-                <code class="scala">
-  import cats.effect.{ConcurrentEffect => CE}
+
+              <pre style="font-size: 0.34em; height: 50px; margin-top: -38px; width: 98%;">
+                <code class="scala">import cats.effect.{ConcurrentEffect => CE}
 
 </code>
               </pre>
+              <p><em>Tagless Final</em> encoding</p<>
             </div>
           </div>
-
-          <aside class="notes">
-            This a complete http4s program. We already saw how to define endpoints and this is only one of the many possible ways to start
-            the http server in http4s. The program is a simple key-value store in memory. You can save and retrieve pairs of key-value strings
-            and also delete them. And these actions can work asynchronously of course, like with any other http framework, Play, Spring, etc.
-            The program is also pure, or, if we are dare enough, I could venture saying "referential transparent". Let's see why.
-            <p>
-              To implement the same program using a non-functional http framework like Play, for instance, we would be forced to introduce
-              some mutable state to store our strings, by using a mutable map or updating the reference to the new immutable map when we need
-              to bring some modification, right? But we love functional programming, and we don't want to have mutable state in our programs, no?
-              How can we handle then our side effects by not denying our FP philosophy? The solution is provided by the brilliant minds behind
-              Haskell, and it's very simple. Just make your entire program &quot;pure&quot;, transforming all side-effects in pure values by
-              delaying, or better suspending, their execution.
-              Uhmm... not clear, eh!? How can we do that in practice ?
-              Enclosing, wrapping all program's computations, all side-effects in the IO monad.
-            </p>
-            <p>
-              And that's how your functional program but even libraries like http4s use data types like IO from cats-effect for instance, but
-              it could be Monix Task, or ZIO, all Scala implementations of the Haskell IO monad, to control how and when running side-effects.
-              The IO monad indeed, does not run the enclosed expression. Differently then from a Future, for instance, which is instead eager.
-              The IO monad rather, transforms the expression into a sort of pure description of what to compute, which is then added, under
-              the hood by cats-effect, to an internal data structure. Think of this data structure as a sort of list. When all descriptions
-              the program consists of are added to this "list", typically that's the time when you run an unsafeRun method which loops over
-              the list and perform the actual computations.
-            </p>
-            <p>
-              Actually in this example, there is no unsafeRun method anywhere. This is because I'm using &quot;IOApp&quot;, a trait provided
-              by cats-effect which gives a let's say pre-cooked context for running your pure program. Without IOApp the first lines of my
-              program should have been these ones... <strong>CLICK!</strong>
-              By using IOApp I don't need then to define the implicits and even the main method, as they are already defined for us in IOApp.
-              As a rule of thumb, ideally, keep in mind that you should never need to use an unsafeRun method in your code.
-            </p>
-            <p>
-              Quickly, a short explanation of the other symbols and types here in the code not really relevant for this talk.
-              The 3 symbols (gt_than-gt_than-equal, star-gt_than and lt_than-plus-gt_than) are from Cats, and are just aliases respectively for
-              flatMap, product right and combine. Product right is a function of the Apply type class, that allows you to compose two effectful
-              expressions, ignoring the result of the 1st expression. It' just like writing the body of the &quot;add&quot; function in braces
-              with the semicolon between the two expressions. The combineK symbols instead, from the SemigroupK type class, combines here the
-              three routes in one enclosing sequence.
-              Ref instead is another data type, still from cats-effect, for enclosing shared state, in this case the immutable map I'm using as
-              key-value store, and handle it in a concurrent and pure manner. You can think of Ref just like a functional wrapper around the
-              Atomic Java primitives based on CAS (compare-and-swap). Still, you can just Google if you want to know more about this stuff.
-              There's a lot of material online, like videos, blogs, tutorials.
-            </p>
-            <p>
-              Ok, but all this IO thingy does not explain yet the uppercase F we saw before in the authentication code, right? What does the
-              IO monad have to do with the Big F? Well, I hope at this point it will be easy to understand how they are correlated
-              <strong>CLICK!</strong>
-            </p>
-            <p>
-              Ok. We can see that program is now a polymorphic function, and not more a val, because it takes now a type parameter with context
-              bounds, same as the http function, and that within the two functions, the IO has been replaced everywhere with F. However, apart
-              from these few changes, the two implementations are pretty much identical. So why do we have done this ? What advantages do we get
-              from this different encoding ? Well, the first evident difference that you should be able to notice is that program and http
-              are not bound anymore to IO. Indeed the two functions do not care of what type is the container of the side-effects they enclose.
-              The only constraint is that it should implicitly provide at least the same functionalities of ConcurrentEffect and Timer, two other
-              data types from cats-effect.
-              And this is nice in some way because our functions are now more flexible, easier to code not being anymore bound to a specific monad.
-              We can even test them with other similar effectful data types out there and verify how they differ. Passing for instance Monix Task
-              to program instead of IO from cats-effect.
-              Due to lack of time, I won't delve further this topic, but again if you google &quot;tagless final&quot; you can learn more about
-              this encoding style, about algebras, interpreters, and so forth.
-            </p>
-            <p>
-              Ok. Let's go back once again to our security workflow, as we should be able now to understand how are implemented our functional
-              authenticator and authoriser.
-            </p>
-          </aside>
         </section>
 
-        <section data-title="User authentication">
-          <div class="row">
-            <div class="column left">
-              <pre id="tokenOps">
-                <code class="scala" data-line-numbers>import tsec.common.{SecureRandomId => SR}
+        <section>
+          <div class="slide-title">User authentication (Auth microservice)</div>
+          <p style="margin-top: -8px;">Origin of the <em>stateful</em> refresh token.</p>
+          <pre style="font-size: 0.38em; margin-top: -22px; max-width: 660px;">
+            <code class="scala" data-line-numbers>import tsec.common.{SecureRandomId => SR}
 
 class TokenOps[F[_]](auth: Authenticator[F])(
     implicit C: AuthConfig, TR: TokenRepo[F], S: Sync[F]
@@ -718,11 +395,18 @@ class TokenOps[F[_]](auth: Authenticator[F])(
     }
     yield token
 }</code>
-              </pre>
+          </pre>
+        </section>
+
+        <section>
+          <div class="slide-title">The Authenticator class (Auth microservice)</div>
+          <div class="row">
+            <div class="column left" style="margin-top: 180px;">
+              Adds JWT & refresh token to the response <em>if</em> the credentials were validated.
             </div>
 
-            <div class="column right fragment">
-              <pre id="authenticator">
+            <div class="column right">
+              <pre style="font-size: 0.34em; margin-top: 0; width: 98%">
                 <code class="scala" data-line-numbers>class Authenticator[F[_]: Sync](
     jwtAlgorithm: JwtRSAAlgorithm, privateKey: PrivateKey) {
 
@@ -756,18 +440,15 @@ class TokenOps[F[_]](auth: Authenticator[F])(
               </pre>
             </div>
           </div>
-
-          <aside class="notes">
-            <p>
-            </p>
-          </aside>
         </section>
 
-        <section data-title="User authorisation">
-          <div class="row">
-            <div class="column left">
-              <pre id="authorisation-routes">
-                <code class="scala" data-line-numbers>object Routes {
+        <section>
+          <div class="slide-title">User authorisation (<em>other microservices</em>)</div>
+          <p style="margin: 100px auto 8px;">
+            <em>Non</em>-public endpoints are</br>protected by <span class="fromCode">Authoriser</span>.
+          </p>
+          <pre style="font-size: 0.38em; margin: 0 auto; max-width: 660px;">
+            <code class="scala" data-line-numbers>object Routes {
   def apply[F[_]: CE](c: Countries): F[HttpRoutes[F]] =
     for {
       authoriser &lt;- Authoriser[F]("/sherpair.io/auth", RS256)
@@ -777,47 +458,84 @@ class TokenOps[F[_]](auth: Authenticator[F])(
     }
     yield routes
 }</code>
-              </pre>
-              <pre id="authorisation-app">
-                <code class="scala" data-line-numbers>class CountryApp[F[_]: CE](c: Countries) extends Http4sDsl[F] {
+          </pre>
+        </section>
+
+        <section>
+          <div class="slide-title">User authorisation (other microservices)</div>
+          <div class="row">
+            <div class="column left" style="font-size: 0.7em; margin-top: 86px;">
+              <p>
+                <em>Non</em>-public endpoints are defined by using <span class="fromCode">AuthedRoutes</span> (from http4s).
+              </p>
+              <p>
+                Endpoints expecting from the JWT's claims some content, here of <span class="fromCode">UserFromClaim</span> type,
+                may add a parameter, named here <span class="fromCode">uFC</span>, after an <span class="fromCode">as</span> keyword.
+              </p>
+            </div>
+
+            <div class="column right">
+              <pre style="font-size: 0.36em; margin-top: 20px; width: 98%;">
+                <code class="scala" data-line-numbers>
+class CountryApp[F[_]: CE](c: Countries) extends Http4sDsl[F] {
   implicit val countryEncoder: EntityEncoder[F, Country] =
     jsonEncoderOf[F, Country]
 
-  val routes = AuthedRoutes.of[UserAsClaim, F] {
+  val routes = AuthedRoutes.of[UserFromClaim, F] {
     case GET -> Root / "geo" / "country" / id as _ =>
       findCountry(id) >>= { _.fold(NotFound(id))(Ok(_)) }
 
-    case GET -> Root / "geo" / "health" as user =>
-      masterOnly(user, healthCheck)
+    case GET -> Root / "geo" / "health" as uFC =>
+      masterOnly(uFC, healthCheck)
   }
 
   def findCountry(id: String): F[Option[Country]] = ...
 
   def healthCheck: F[Response[F]] = ...
 
-  def masterOnly(user: UserAsClaim, f: => F[Response[F]]) =
-    if (user.role == Master) f else Forbidden("Unauthorized")
+  def masterOnly(uFC: UserFromClaim, f: => F[Response[F]]) =
+    if (uFC.role == Master) f else Forbidden("Unauthorized")
 }</code>
               </pre>
+              <div style="font-size: 0.7em;">
+                The user's <em>role</em> is filtered at route-level by a supporting function,
+                here named <span class="fromCode">masterOnly</span>.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="slide-title">User authorisation (other microservices)</div>
+          <div class="row">
+            <div class="column left" style="font-size: 0.7em; margin-top: 20px;">
+              <div>
+                <span class="fromCode">Authoriser</span> is just an alias for</br>
+                <span class="fromCode">AuthMiddleware</span> &nbsp;(from http4s).
+              </div>
+              <div class="fragment" data-fragment-index="1" style="margin-top: 200px;">
+                <span class="fromCode">Authoriser</span> decodes and validates the JWT.
+                <div>If OK the request is authorised.</div>
+              </div>
             </div>
 
-            <div class="column right fragment">
-              <pre id="authoriser">
-                <code class="scala" data-line-numbers>  type Authoriser[F[_]] = AuthMiddleware[F, UserAsClaim]
-  type EitherUC = Either[String, UserAsClaim]
+            <div class="column right">
+              <pre style="font-size: 0.36em; margin-top: 0; width: 94%;">
+                <code class="scala" data-line-numbers>  type Authoriser[F[_]] = AuthMiddleware[F, UserFromClaim]
+  type EitherUC = Either[String, UserFromClaim]
 
-  AuthMiddleware(Kleisli(req => validateToken(req)), onFailure)
-
+  AuthMiddleware(Kleisli(req => validateJwt(req)), onFailure)
 </code>
               </pre>
-              <pre id="authoriser-app">
-                <code class="scala" data-line-numbers>  val onFailure =
+
+              <pre class="fragment" data-fragment-index="1" style="font-size: 0.36em; margin-top: -16px; width: 94%;">
+               <code class="scala" data-line-numbers>  val onFailure =
     Kleisli(req => OptionT.liftF(Forbidden(req.context)))
 
-  def validateToken(req: Request[F]): F[EitherUC] =
-    retrieveBearerToken(req).fold(noToken)(decodeToken(_))
+  def validateJwt(req: Request[F]): F[EitherUC] =
+    retrieveBearerToken(req).fold(noJwt)(decodeJwt(_))
 
-  def decodeToken(token: String): F[EitherUC] =
+  def decodeJwt(token: String): F[EitherUC] =
     JwtCirce.decodeAll(token, publicKey, jwtAlgorithm)
       .map(tokenAsTuple => validateClaim(tokenAsTuple._2))
       .recover { case _: JwtException => notAuthorized }
@@ -825,42 +543,25 @@ class TokenOps[F[_]](auth: Authenticator[F])(
 
   def validateClaim(claim: JwtClaim): EitherUC =
     if (claim.isValid(Claims.iss, issuer))
-      decode[UserAsClaim](claim.content).fold {
+      decode[UserFromClaim](claim.content).fold {
       _ => notAuthorized, content => content.asRight[String]
     }
     else notAuthorized
 
-  val noToken = "Missing token".asLeft[UserAsClaim].pure[F]
-  val notAuthorized = "Not authorized".asLeft[UserAsClaim]
+  val noJwt = "Missing token".asLeft[UserFromClaim].pure[F]
+  val notAuthorized = "Not authorized".asLeft[UserFromClaim]
 
 </code>
-              </pre>
-            </div>
+              </pre
           </div>
-    
-          <aside class="notes">
-            <p>
-            </p>
-          </aside>
-        </section>
-
-        <section data-title="The missing bits">
-          <ul>
-            <li class="fragment">JWT implementation</li>
-            <li class="fragment">JWT invalidation</li>
-            <li class="fragment">JWT alternatives?</li>
-          </ul>
-
-          <aside class="notes">
-          </aside>
         </section>
 
         <section>
-          <p>Questions ?</p>
+          <h2 style="margin: 240px auto 0;">Questions ?</h2>
         </section>
 
         <section>
-          <p>Thanks!</p>
+          <h2 style="margin: 240px auto 0;">Thanks!</h2>
         </section>
 
       </div>
@@ -875,11 +576,13 @@ class TokenOps[F[_]](auth: Authenticator[F])(
 			Reveal.initialize({
 
         width: 1280,
+        height: 720,
 
+        center: false,
         controls: false,
         hash: true,
 				progress: true,
-				transition: 'slide', // none/fade/slide/convex/concave/zoom
+				transition: 'fade', // none/fade/slide/convex/concave/zoom
 
 				dependencies: [
 					{ src: 'plugin/highlight/highlight.js', async: true },
@@ -889,31 +592,8 @@ class TokenOps[F[_]](auth: Authenticator[F])(
 				]
 			});
 
-      const slide_title = document.querySelectorAll('.slide-title')[0]
-      const w4s_links = document.querySelectorAll('.weather4s-links')[0]
-
-      function slideControl() {
-        if (Reveal.isFirstSlide()) {
-          slide_title.style.visibility = 'hidden'
-          w4s_links.style.visibility = 'visible'
-        }
-        else {
-          w4s_links.style.visibility = 'hidden'
-          const currentSlide = Reveal.getCurrentSlide()
-          if (currentSlide.hasAttribute("data-title")) {
-            slide_title.textContent = currentSlide.getAttribute("data-title")
-            slide_title.style.visibility = 'visible'
-          }
-          else slide_title.style.visibility = 'hidden'
-        }
-      }
-
-      Reveal.addEventListener('slidechanged', function(evt) {
-        slideControl()
-      })
-
-      // On page-load only
-      slideControl()
+      Reveal.configure({ pdfSeparateFragments: false });
+      Reveal.configure({ pdfMaxPagesPerSlide: 1 })
 		</script>
 	</body>
 </html>

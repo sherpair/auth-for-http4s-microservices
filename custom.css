@@ -2,8 +2,14 @@ a, a:visited {
   color: #42affa;
   text-decoration: none;
 }
+em {
+  color: #00aa7f;
+}
 .column {
   float: left;
+}
+.fromCode {
+  color: #e0c46c;
 }
 .left {
   margin-right: 0;
@@ -17,7 +23,6 @@ a, a:visited {
   display: table;
   clear: both;
 }
-
 .pizza-microservice {
   height: 480px;
   width: 420px;
@@ -27,55 +32,6 @@ a, a:visited {
   float: left;
   margin-top: 50px;
   margin-left: 36px;
-}
-pre#legal-secret-fp, pre#impure-rnd, pre#legal-secret-oo,
-pre#authorisation-routes, pre#authorisation-app {
-  font-size: 0.36em;
-  width: 98%;
-}
-pre#authoriser, pre#authoriser-app {
-  font-size: 0.36em;
-  width: 94%;
-}
-pre#impure-rnd, pre#authorisation-app {
-  margin-top: -30px;
-}
-pre#authoriser {
-  margin-top: 69px;
-}
-pre#kvstore-ioapp, pre#kvstore-io,
-pre#kvstore-tf, pre#kvstore-notes,
-pre#authenticator {
-  font-size: 0.34em;
-  width: 98%;
-}
-pre#tokenOps {
-  font-size: 0.34em;
-  width: 94%;
-}
-pre#kvstore-ioapp, pre#kvstore-tf {
-  margin-top: -16px;
-}
-pre#kvstore-io, pre#kvstore-notes {
-  margin-top: -38px;
-}
-pre#activation-token, pre#activation-email {
-  width: 720px;
-}
-pre#legal-secret-fp, pre#legal-secret-oo,
-pre#activation-token, pre#authorisation-routes,
-pre#tokenOps, pre#authenticator {
-  margin: 68px auto 0;
-}
-pre#activation-email {
-  margin: 0px auto;
-}
-pre#legal-secret-fp code,
-pre#legal-secret-oo code {
-  padding: 12px 6px;
-}
-pre#w4s-authentication code {
-  padding: 12px;
 }
 .reveal h1, .reveal h2, .reveal h3,
 .reveal h4, .reveal h5, .reveal h6 {
@@ -104,42 +60,16 @@ pre#w4s-authentication code {
   float: right;
   margin-top: -12px;
 }
-.signin {
-  max-width: 760px;
-}
 .slide-title {
-  color: white;
   font-family: Source Sans Pro;
-  font-size: 5em;
+  font-size: 1.4em;
   font-weight: 600;
-  margin-left: 2%;
-  margin-top: 2%;
-  position: absolute;
-  visibility: hidden;
+  margin-bottom: 40px;
+  text-align: left;
 }
-.user-authentication {
-  margin-top: 80px;
-}
-.user-authentication .left {
-  margin-right: 1%;
-  width: 40%;
-}
-.user-authentication .right {
-  width: 59%;
-}
-.user-authentication pre {
-  font-size: 0.36em;
-}
-.user-registration {
-  margin-top: 72px;
-}
-.weather4s-links {
-  bottom: 5%;
-  color: white;
+.weather4s-links, .author {
   font-family: Source Sans Pro;
-  font-size: 2.6em;
+  font-size: 0.8em;
   font-weight: 400;
-  margin-left: 2%;
-  position: absolute;
-  visibility: visible;
+  margin-top: 220px;
 }

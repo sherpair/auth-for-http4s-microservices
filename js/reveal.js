@@ -5958,6 +5958,11 @@
 			return ( indexh === 0 && indexv === 0 );
 		},
 
+		// Returns true if we're currently on the second slide
+		isSecondSlide: function() {
+			return indexh === 1;
+		},
+
 		// Returns true if we're currently on the last slide
 		isLastSlide: function() {
 			if( currentSlide ) {
